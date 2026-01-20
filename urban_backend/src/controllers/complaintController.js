@@ -1,12 +1,59 @@
 const Complaint = require('../models/Complaint');
 
-// Submit complaint
+// Submit complaint (Fixed user ID issue)
 exports.submitComplaint = async (req, res) => {
   try {
-    const { title, description, imageUrl, audioUrl, videoUrl, location, userId } = req.body;
+    console.log('📥 Complaint submission request:', req.body);
+    console.log('👤 User:', req.user);
     
-    if (!title || !userId || !location || !location.lng || !location.lat) {
-      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    let { title, description, imageUrl, audioUrl, videoUrl, location, userId, userName, userContact } = req.body;
+    
+    // 🔥 FIX: Use authenticated user's ID if not provided
+    if (!userId && req.user) {
+      userId = req.user.id || req.user._id;
+    }
+    
+    if (!userName && req.user) {
+      userName = req.user.name || req.user.firstName || '';
+    }
+    
+    // 🔥 AUTO-CONVERT MOBILE FORMAT TO CORRECT FORMAT
+    if (req.body.lat && req.body.long && !location) {
+      location = {
+        coordinates: [parseFloat(req.body.long), parseFloat(req.body.lat)]
+      };
+    }
+    
+    if (req.body.latitude !== undefined && req.body.longitude !== undefined && !location) {
+      location = {
+        coordinates: [parseFloat(req.body.longitude), parseFloat(req.body.latitude)]
+      };
+    }
+    
+    if (!title && description) {
+      title = description.substring(0, 50) + (description.length > 50 ? '...' : '');
+    }
+    
+    // 🔥 FIXED: Validate user ID
+    if (!title || !userId || !location || !location.coordinates || location.coordinates.length !== 2) {
+      console.log('❌ Missing required fields:', { 
+        title: !!title, 
+        userId: !!userId, 
+        location: !!location,
+        coordinates: location?.coordinates?.length === 2
+      });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Missing required fields: title, userId, and location with coordinates required' 
+      });
+    }
+    
+    const [lng, lat] = location.coordinates;
+    if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid coordinates: longitude (-180 to 180), latitude (-90 to 90)'
+      });
     }
     
     const complaint = new Complaint({
@@ -16,19 +63,20 @@ exports.submitComplaint = async (req, res) => {
       audioUrl: audioUrl || '',
       videoUrl: videoUrl || '',
       location: {
-
         type: 'Point',
-        coordinates: [location.lng, location.lat]
+        coordinates: location.coordinates
       },
-      userId
+      userId,
+      userName: userName || '',
+      userContact: userContact || ''
     });
     
     await complaint.save();
     
-    // Trigger AI analysis
-    process.nextTick(() => {
-      categorizeComplaint(complaint._id);
-    });
+    // Run AI categorization in background
+    setTimeout(() => categorizeComplaint(complaint._id), 100);
+    
+    console.log('✅ Complaint saved successfully:', complaint._id);
     
     return res.status(201).json({
       success: true,
@@ -36,8 +84,43 @@ exports.submitComplaint = async (req, res) => {
       complaint
     });
   } catch (error) {
-    console.error('Submit error:', error);
-    return res.status(500).json({ success: false, error: 'Something went wrong' });
+    console.error('❌ Submit error:', error.message);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Something went wrong: ' + error.message 
+    });
+  }
+};
+
+// Get user's complaints (Fixed user ID issue)
+exports.getMyComplaints = async (req, res) => {
+  try {
+    console.log('👤 Getting complaints for user:', req.user);
+    
+    // 🔥 FIX: Use authenticated user's ID
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Unauthorized: Please login first' 
+      });
+    }
+    
+    const complaints = await Complaint.find({ 
+      userId, 
+      status: { $ne: 'deleted' } 
+    }).sort({ createdAt: -1 });
+    
+    return res.json({ 
+      success: true, 
+      complaints: complaints.map(comp => comp.toObject()) 
+    });
+  } catch (error) {
+    console.error('Get my complaints error:', error.message);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch complaints' 
+    });
   }
 };
 
@@ -45,20 +128,39 @@ exports.submitComplaint = async (req, res) => {
 exports.getComplaints = async (req, res) => {
   try {
     const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
-      .sort({ priorityScore: -1, complaintCount: -1, createdAt: -1 });
-    const plainComplaints = complaints.map(comp => comp.toObject());
-    return res.json({ success: true, plainComplaints });
+      .sort({ createdAt: -1 });
+    return res.json({ 
+      success: true, 
+      complaints: complaints.map(comp => comp.toObject()) 
+    });
   } catch (error) {
-    console.error('Get complaints error:', error);
+    console.error('Get complaints error:', error.message);
     return res.status(500).json({ success: false, error: 'Failed to fetch complaints' });
   }
 };
-// Water: 8-10, Electricity: 7-9, Garbage: 6-8, Other: 3-5
-const getPriorityScore = (category) => {
-  const scores = { water: 9, electricity: 8, garbage: 7, other: 4 };
-  return scores[category] || 4;
+
+// Get admin complaints
+exports.getAdminComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
+      .sort({ priorityScore: -1, complaintCount: -1, createdAt: -1 });
+    return res.json({ 
+      success: true, 
+      plainComplaints: complaints.map(comp => ({
+        ...comp.toObject(),
+        location: {
+          type: comp.location.type,
+          coordinates: comp.location.coordinates,
+          lat: comp.location.coordinates[1],
+          lng: comp.location.coordinates[0]
+        }
+      }))
+    });
+  } catch (error) {
+    console.error('Get admin complaints error:', error.message);
+    return res.status(500).json({ success: false, error: 'Failed to fetch admin complaints' });
+  }
 };
-// src/controllers/complaintController.js
 
 // Update complaint status
 exports.updateStatus = async (req, res) => {
@@ -66,52 +168,19 @@ exports.updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     
-    // ✅ VALIDATE STATUS TYPES
-    const validStatuses = ['working', 'solved', 'fake'];
+    const validStatuses = ['working', 'solved', 'deleted'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid status. Valid statuses: working, solved, fake' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid status. Valid: working, solved, deleted' 
+      });
     }
     
-    let updateData;
-    if (status === 'fake') {
-      // Mark as deleted instead of fake
-      updateData = { status: 'deleted' };
-    } else {
-      // Update to working or solved
-      updateData = { status: status };
-    }
-    
-    const complaint = await Complaint.findByIdAndUpdate(id, updateData, { new: true });
-    
-    if (!complaint) {
-      return res.status(404).json({ success: false, error: 'Complaint not found' });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Status updated successfully',
-      complaint
-    });
-  } catch (error) {
-    console.error('Update status error:', error);
-    res.status(500).json({ success: false, error: 'Failed to update status' });
-  }
-};
-
-
-// Update status
-exports.updateStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    
-    const validStatuses = ['working', 'solved', 'fake'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid status' });
-    }
-    
-    const updateData = status === 'fake' ? { status: 'deleted' } : { status };
-    const complaint = await Complaint.findByIdAndUpdate(id, updateData, { new: true });
+    const complaint = await Complaint.findByIdAndUpdate(
+      id,
+      { status, updatedAt: new Date() },
+      { new: true }
+    );
     
     if (!complaint) {
       return res.status(404).json({ success: false, error: 'Complaint not found' });
@@ -123,12 +192,32 @@ exports.updateStatus = async (req, res) => {
       complaint
     });
   } catch (error) {
-    console.error('Update status error:', error);
+    console.error('Update status error:', error.message);
     return res.status(500).json({ success: false, error: 'Failed to update status' });
   }
 };
 
-// AI Categorization (internal function)
+// Get complaint by ID
+exports.getComplaintById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const complaint = await Complaint.findById(id);
+    
+    if (!complaint) {
+      return res.status(404).json({ success: false, error: 'Complaint not found' });
+    }
+    
+    return res.json({
+      success: true,
+      complaint: complaint.toObject()
+    });
+  } catch (error) {
+    console.error('Get complaint by ID error:', error.message);
+    return res.status(500).json({ success: false, error: 'Failed to fetch complaint' });
+  }
+};
+
+// AI categorization function
 async function categorizeComplaint(complaintId) {
   try {
     const complaint = await Complaint.findById(complaintId);
@@ -138,67 +227,31 @@ async function categorizeComplaint(complaintId) {
     let category = 'other';
     let department = 'general';
     
-    // Garbage/Waste detection (English + Hindi)
     if (text.includes('garbage') || text.includes('waste') || text.includes('kachra') || text.includes('कचरा')) {
       category = 'garbage';
       department = 'sanitation';
-    }
-    // Water detection (English + Hindi)
-    else if (text.includes('water') || text.includes('jal') || text.includes('pipe') || 
-             text.includes('paani') || text.includes('पानी') || text.includes('जल')) {
+    } else if (text.includes('water') || text.includes('jal') || text.includes('pipe') || 
+               text.includes('paani') || text.includes('पानी') || text.includes('जल')) {
       category = 'water';
       department = 'water-works';
-    }
-    // Electricity detection (English + Hindi)
-    else if (text.includes('electricity') || text.includes('bijli') || text.includes('power') || 
-             text.includes('light') || text.includes('बिजली')) {
+    } else if (text.includes('electricity') || text.includes('bijli') || text.includes('power') || 
+               text.includes('light') || text.includes('बिजली')) {
       category = 'electricity';
       department = 'power';
-    }
-    // Road detection (English + Hindi)
-    else if (text.includes('road') || text.includes('sadak') || text.includes('pothole') || 
-             text.includes('सड़क')) {
+    } else if (text.includes('road') || text.includes('sadak') || text.includes('pothole') || 
+               text.includes('सड़क')) {
       category = 'road';
       department = 'public-works';
     }
     
-    // Update complaint with AI results
     await Complaint.findByIdAndUpdate(complaintId, {
       category,
       department,
       aiProcessed: true
     });
     
+    console.log('🤖 AI categorized complaint:', complaintId, '->', category, department);
   } catch (error) {
-    console.error('AI categorization failed:', error);
-    // Never crash main flow - log error and continue
+    console.error('❌ AI categorization failed:', error.message);
   }
 }
-
-// Get user's complaints (placeholder - works without JWT for now)
-exports.getMyComplaints = async (req, res) => {
-  try {
-    // For now, return all complaints (will filter by userId when JWT implemented)
-    const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
-      .sort({ createdAt: -1 });
-    const plainComplaints = complaints.map(comp => comp.toObject());
-    return res.json({ success: true, plainComplaints });
-  } catch (error) {
-    console.error('Get my complaints error:', error);
-    return res.status(500).json({ success: false, error: 'Failed to fetch complaints' });
-  }
-};
-
-// Get admin feed (placeholder - works without JWT for now)
-exports.getAdminFeed = async (req, res) => {
-  try {
-    // For now, return all complaints with priority sorting
-    const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
-      .sort({ priorityScore: -1, complaintCount: -1, createdAt: -1 });
-    const plainComplaints = complaints.map(comp => comp.toObject());
-    return res.json({ success: true, plainComplaints });
-  } catch (error) {
-    console.error('Get admin feed error:', error);
-    return res.status(500).json({ success: false, error: 'Failed to fetch complaints' });
-  }
-};

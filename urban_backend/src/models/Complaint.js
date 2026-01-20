@@ -1,39 +1,45 @@
 const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
-  // Basic info
+  // Basic Info
   title: { type: String, required: true },
   description: { type: String, default: '' },
   
-  // Media URLs (from mobile app)
-  imageUrl: { type: String, default: '' },      // Photo URL from mobile
-  audioUrl: { type: String, default: '' },      // Audio URL from mobile  
-  videoUrl: { type: String, default: '' },      // Video URL from mobile
+  // Media (Fixed to save URLs properly)
+  imageUrl: { type: String, default: '' },      // Save actual URL
+  audioUrl: { type: String, default: '' },
+  videoUrl: { type: String, default: '' },
   
-  // Location (mandatory)
+  // Location (Fixed for lat/long)
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true
+    coordinates: {           // [longitude, latitude] format
+      type: [Number],       // Array of [lng, lat]
+      required: true,
+      validate: {
+        validator: function(coords) {
+          return coords.length === 2 && 
+                 typeof coords[0] === 'number' && 
+                 typeof coords[1] === 'number';
+        },
+        message: 'Coordinates must be [longitude, latitude]'
+      }
     }
   },
   
-  // Status & priority
+  // User Info
+  userId: { type: String, required: true },
+  userName: { type: String, default: '' },
+  userContact: { type: String, default: '' },
+  
+  // Status & Tracking
   status: { 
     type: String, 
     enum: ['pending', 'working', 'solved', 'deleted'], 
     default: 'pending' 
   },
-  priorityScore: { type: Number, default: 1 },
-  complaintCount: { type: Number, default: 1 },
   
-  // User info (from mobile app login)
-  userId: { type: String, required: true },
-  userName: { type: String, default: '' },      // Deepanshu Kapri
-  userContact: { type: String, default: '' },   // 8126552327
-  
-  // AI analysis
+  // AI & Categorization
   category: { type: String, default: 'other' },
   department: { type: String, default: 'general' },
   aiProcessed: { type: Boolean, default: false },
@@ -42,10 +48,10 @@ const complaintSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, {
-  timestamps: { updatedAt: 'updatedAt' }
+  timestamps: true
 });
 
-// Geospatial index
+// Ensure 2dsphere index for geospatial queries
 complaintSchema.index({ "location": "2dsphere" });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

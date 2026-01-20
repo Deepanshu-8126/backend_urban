@@ -1,30 +1,41 @@
 const mongoose = require('mongoose');
 
 const officerSchema = new mongoose.Schema({
+  // Personal Info
   name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: true },
+  
+  // Role & Permissions
+  role: { 
+    type: String, 
+    enum: ['admin', 'officer', 'staff'], 
+    default: 'officer' 
+  },
+  
+  // Department & Ward
   department: { 
     type: String, 
-    enum: ['sanitation', 'water-works', 'power', 'public-works', 'drainage', 'general'],
+    enum: ['water', 'electricity', 'roads', 'sanitation', 'health', 'general'],
     required: true 
   },
-  ward: { type: String, required: true },
-  currentWorkload: { type: Number, default: 0 }, // Active complaints
-  maxCapacity: { type: Number, default: 10 },   // Max they can handle
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: [Number] // [lng, lat]
-  },
-  status: { 
-    type: String, 
-    enum: ['available', 'busy', 'on-leave'],
-    default: 'available'
-  },
-  createdAt: { type: Date, default: Date.now }
+  
+  wardId: { type: String, required: true }, // Ward number
+  assignedArea: { type: String, default: '' }, // Specific area
+  
+  // Performance Tracking
+  complaintsAssigned: { type: Number, default: 0 },
+  complaintsResolved: { type: Number, default: 0 },
+  avgResolutionTime: { type: Number, default: 0 }, // in hours
+  
+  // Status
+  isActive: { type: Boolean, default: true },
+  lastLogin: { type: Date, default: null },
+  
+  // Audit
+  createdBy: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
-officerSchema.index({ "location": "2dsphere" });
 module.exports = mongoose.model('Officer', officerSchema);
