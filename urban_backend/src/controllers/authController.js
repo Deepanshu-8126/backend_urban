@@ -29,8 +29,8 @@ const verifyOtp = (email, otp) => {
   }
   
   if (Date.now() > stored.expiresAt) {
+    otpStore.delete(email);
     console.log('❌ OTP expired for:', email);
-    otpStore.delete(email); // Clean up expired OTP
     return { valid: false, reason: 'OTP_EXPIRED' };
   }
   
@@ -39,15 +39,21 @@ const verifyOtp = (email, otp) => {
     return { valid: false, reason: 'OTP_INVALID' };
   }
   
-  // Don't delete OTP yet, let caller decide when to delete
+  otpStore.delete(email);
   console.log('✅ OTP verified for:', email);
-  return { valid: true, stored }; // Return stored data for reference
+  return { valid: true };
 };
 
 // Check email
 exports.checkEmail = async (req, res) => {
-  console.log('📧 Checking email:', req.body.email);
   try {
+    console.log('📧 Checking email request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { email } = req.body;
     
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -60,15 +66,21 @@ exports.checkEmail = async (req, res) => {
     res.json({ exists: !!user });
     
   } catch (error) {
-    console.error('❌ Check email error:', error.message);
+    console.error('Check email error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 };
 
 // User Signup - Sends OTP to USER'S email
 exports.signup = async (req, res) => {
-  console.log('🆕 Signup request:', req.body.email);
   try {
+    console.log('🆕 Signup request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { name, email, password } = req.body;
     
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -82,6 +94,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email already registered' });
     }
     
+    // Use consistent OTP generation
     const otp = generateOtp(email);
     const emailSent = await sendOtpEmail(email, otp);
     
@@ -97,7 +110,7 @@ exports.signup = async (req, res) => {
       email
     });
   } catch (error) {
-    console.error('❌ Signup error:', error.message);
+    console.error('Signup error:', error);
     return res.status(500).json({ success: false, error: 'Signup failed' });
   }
 };
@@ -105,6 +118,13 @@ exports.signup = async (req, res) => {
 // Verify OTP login (handles both new and existing users)
 exports.verifyOtp = async (req, res) => {
   try {
+    console.log('✅ OTP verification request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { email, otp, name, password } = req.body;
     
     if (!email || !otp) {
@@ -136,14 +156,16 @@ exports.verifyOtp = async (req, res) => {
         name, 
         email, 
         password: hashedPassword,
-        role: 'citizen'  // Small letter
+        role: 'citizen' 
       });
       await user.save();
+      console.log('✅ New user created:', user.email);
     }
     
     const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, 
       process.env.JWT_SECRET || 'urban_secret', { expiresIn: '24h' });
     
+    console.log('🔐 Token generated for:', user.email);
     res.json({ success: true, message: 'Login successful', token, user: {
       id: user._id, name: user.name, email: user.email, role: user.role
     }});
@@ -155,8 +177,14 @@ exports.verifyOtp = async (req, res) => {
 
 // Password login
 exports.login = async (req, res) => {
-  console.log('🔐 Login request:', req.body.email);
   try {
+    console.log('🔐 Login request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { email, password } = req.body;
     
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -184,15 +212,21 @@ exports.login = async (req, res) => {
       id: user._id, name: user.name, email: user.email, role: user.role
     }});
   } catch (error) {
-    console.error('❌ Login error:', error.message);
+    console.error('Login error:', error);
     res.status(500).json({ success: false, error: 'Login failed' });
   }
 };
 
 // Forgot Password
 exports.forgotPassword = async (req, res) => {
-  console.log(' recover password:', req.body.email);
   try {
+    console.log(' recover password request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { email } = req.body;
     
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -221,14 +255,21 @@ exports.forgotPassword = async (req, res) => {
       email 
     });
   } catch (error) {
-    console.error('❌ Forgot password error:', error.message);
+    console.error('Forgot password error:', error);
     res.status(500).json({ success: false, error: 'Failed to process request' });
   }
 };
 
-// Reset Password (Fixed OTP Issue)
+// Reset Password
 exports.resetPassword = async (req, res) => {
   try {
+    console.log('🔄 Password reset request body:', req.body);
+    
+    // 🔥 FIXED: Check if body exists
+    if (!req.body) {
+      return res.status(400).json({ success: false, error: 'Request body is required' });
+    }
+    
     const { email, otp, newPassword } = req.body;
     
     if (!email || !otp || !newPassword) {
@@ -236,54 +277,39 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, error: 'All fields are required' });
     }
     
-    // Verify OTP using existing function
     const verification = verifyOtp(email, otp);
     if (!verification.valid) {
-      console.log('❌ OTP verification failed for password reset:', verification.reason);
+      console.log('❌ Password reset OTP verification failed:', verification.reason);
       let errorMessage = 'Invalid OTP. Please request a new OTP.';
       if (verification.reason === 'OTP_EXPIRED') {
         errorMessage = 'OTP has expired. Please request a new OTP.';
-      } else if (verification.reason === 'OTP_NOT_FOUND') {
-        errorMessage = 'No OTP found for this email. Please request a new OTP.';
       }
       return res.status(400).json({ success: false, error: errorMessage });
     }
     
-    // Now verify OTP again and delete it only after successful password change
-    const stored = otpStore.get(email);
-    if (stored && stored.otp === otp && Date.now() <= stored.expiresAt) {
-      // OTP is valid, now find user
-      const user = await User.findOne({ email });
-      if (!user) {
-        console.log('❌ User not found for password reset:', email);
-        return res.status(404).json({ success: false, error: 'User not found' });
-      }
-      
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      user.password = hashedPassword;
-      await user.save();
-      
-      // NOW delete OTP after successful password reset
-      otpStore.delete(email);
-      
-      console.log('✅ Password reset successful for:', email);
-      res.json({ success: true, message: 'Password reset successful' });
-    } else {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid or expired OTP. Please request a new OTP.' 
-      });
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log('❌ User not found for password reset:', email);
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    
+    console.log('✅ Password reset successful for:', email);
+    res.json({ success: true, message: 'Password reset successful' });
   } catch (error) {
-    console.error('❌ Reset password error:', error.message);
+    console.error('Reset password error:', error);
     res.status(500).json({ success: false, error: 'Failed to reset password' });
   }
 };
+
 // Get user profile
 exports.getProfile = async (req, res) => {
-  console.log('👤 Profile request for user:', req.user?.id);
   try {
+    console.log('👤 Profile request for user:', req.user?.id);
+    
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       console.log('❌ User not found for profile:', req.user.id);
@@ -293,7 +319,7 @@ exports.getProfile = async (req, res) => {
     console.log('✅ Profile retrieved for:', user.email);
     res.json({ success: true, user });
   } catch (error) {
-    console.error('❌ Get profile error:', error.message);
+    console.error('Get profile error:', error);
     res.status(500).json({ success: false, error: 'Failed to get profile' });
   }
 };

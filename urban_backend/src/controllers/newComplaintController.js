@@ -1,16 +1,16 @@
 const Complaint = require('../models/Complaint');
+const User = require('../models/User');
 
-// Submit complaint (Updated for 50mb limit)
+// Submit complaint with AI routing
 exports.submitComplaint = async (req, res) => {
   try {
-    console.log('📥 Complaint submission request:', req.body);
-    console.log('👤 User:', req.user);
+    console.log('📥 New complaint submission request:', req.body);
     
     let { title, description, imageUrl, audioUrl, videoUrl, location, userId, userName, userContact } = req.body;
     
     // Use authenticated user's ID if not provided
     if (!userId && req.user) {
-      userId = req.user.id || req.user._id;
+      userId = req.user.id;
     }
     
     if (!userName && req.user) {
@@ -35,12 +35,7 @@ exports.submitComplaint = async (req, res) => {
     }
     
     if (!title || !userId || !location || !location.coordinates || location.coordinates.length !== 2) {
-      console.log('❌ Missing required fields:', { 
-        title: !!title, 
-        userId: !!userId, 
-        location: !!location,
-        coordinates: location?.coordinates?.length === 2
-      });
+      console.log('❌ Missing required fields:', { title, userId, location });
       return res.status(400).json({ 
         success: false, 
         error: 'Missing required fields: title, userId, and location with coordinates required' 
@@ -75,7 +70,7 @@ exports.submitComplaint = async (req, res) => {
     // Run AI categorization in background
     setTimeout(() => categorizeComplaint(complaint._id), 100);
     
-    console.log('✅ Complaint saved successfully:', complaint._id);
+    console.log('✅ New complaint saved successfully:', complaint._id);
     
     return res.status(201).json({
       success: true,
@@ -91,37 +86,42 @@ exports.submitComplaint = async (req, res) => {
   }
 };
 
-// Get admin complaints (Updated for full user details)
+// Get admin complaints with user details (AI Routing)
 exports.getAdminComplaints = async (req, res) => {
   try {
-    // Get complaints based on admin's department
+    // Filter complaints based on admin's department
     let filter = { status: { $ne: 'deleted' } };
     if (req.user && req.user.department) {
       filter.assignedDept = req.user.department; // AI routing
     }
     
     const complaints = await Complaint.find(filter)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }); // Newest first
     
-    const formattedComplaints = complaints.map(comp => ({
-      ...comp.toObject(),
-      location: {
-        type: comp.location.type,
-        coordinates: comp.location.coordinates,
-        lat: comp.location.coordinates[1],
-        lng: comp.location.coordinates[0]
-      },
-      // Include user details
-      user: {
-        name: comp.userName,
-        email: comp.userId, // This would be user ID, you might need to populate
-        contact: comp.userContact
-      }
-    }));
+    const detailedComplaints = [];
+    
+    for (const complaint of complaints) {
+      // Get user details
+      const user = await User.findById(complaint.userId).select('name email');
+      
+      detailedComplaints.push({
+        ...complaint.toObject(),
+        user: {
+          name: user?.name || complaint.userName,
+          email: user?.email || 'unknown@example.com'
+        },
+        location: {
+          type: complaint.location.type,
+          coordinates: complaint.location.coordinates,
+          lat: complaint.location.coordinates[1],
+          lng: complaint.location.coordinates[0]
+        }
+      });
+    }
     
     return res.json({ 
       success: true, 
-      plainComplaints: formattedComplaints 
+      complaints: detailedComplaints 
     });
   } catch (error) {
     console.error('Get admin complaints error:', error.message);
@@ -129,31 +129,26 @@ exports.getAdminComplaints = async (req, res) => {
   }
 };
 
-// Update status and admin message (New API)
+// Update status and admin message
 exports.updateStatusAndMessage = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, adminMessage } = req.body;
     
-    const validStatuses = ['working', 'solved', 'fake', 'deleted'];
+    const validStatuses = ['working', 'solved', 'fake'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid status. Valid: working, solved, fake, deleted' 
+        error: 'Invalid status. Valid: working, solved, fake' 
       });
     }
     
-    // Update complaint with status and admin message
     const updateData = {
-      status,
+      status: status === 'fake' ? 'deleted' : status,
       adminMessage: adminMessage || '',
       adminResponseAt: new Date(),
       updatedAt: new Date()
     };
-    
-    if (status === 'fake' || status === 'deleted') {
-      updateData.status = 'deleted'; // Hide fake complaints
-    }
     
     const complaint = await Complaint.findByIdAndUpdate(
       id,
@@ -176,7 +171,7 @@ exports.updateStatusAndMessage = async (req, res) => {
   }
 };
 
-// Get user's complaints (Updated for status and message)
+// Get user's complaints with admin response
 exports.getMyComplaints = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -194,7 +189,8 @@ exports.getMyComplaints = async (req, res) => {
         // Include admin response info
         hasAdminResponse: !!comp.adminMessage,
         adminMessage: comp.adminMessage || 'Problem Submitted',
-        adminResponseAt: comp.adminResponseAt
+        adminResponseAt: comp.adminResponseAt,
+        status: comp.status
       }))
     });
   } catch (error) {
@@ -203,7 +199,42 @@ exports.getMyComplaints = async (req, res) => {
   }
 };
 
-// AI categorization function (Updated for department routing)
+// Get all complaints
+exports.getComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
+      .sort({ createdAt: -1 });
+    return res.json({ 
+      success: true, 
+      complaints: complaints.map(comp => comp.toObject()) 
+    });
+  } catch (error) {
+    console.error('Get complaints error:', error.message);
+    return res.status(500).json({ success: false, error: 'Failed to fetch complaints' });
+  }
+};
+
+// Get complaint by ID
+exports.getComplaintById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const complaint = await Complaint.findById(id);
+    
+    if (!complaint) {
+      return res.status(404).json({ success: false, error: 'Complaint not found' });
+    }
+    
+    return res.json({
+      success: true,
+      complaint: complaint.toObject()
+    });
+  } catch (error) {
+    console.error('Get complaint by ID error:', error.message);
+    return res.status(500).json({ success: false, error: 'Failed to fetch complaint' });
+  }
+};
+
+// AI categorization function
 async function categorizeComplaint(complaintId) {
   try {
     const complaint = await Complaint.findById(complaintId);
@@ -214,6 +245,7 @@ async function categorizeComplaint(complaintId) {
     let department = 'general';
     let assignedDept = 'general';
     
+    // Enhanced AI detection
     if (text.includes('garbage') || text.includes('waste') || text.includes('kachra') || text.includes('कचरा')) {
       category = 'garbage';
       department = 'sanitation';
@@ -253,36 +285,5 @@ async function categorizeComplaint(complaintId) {
   }
 }
 
-// Export other functions as they were...
-exports.getComplaints = async (req, res) => {
-  try {
-    const complaints = await Complaint.find({ status: { $ne: 'deleted' } })
-      .sort({ createdAt: -1 });
-    return res.json({ 
-      success: true, 
-      complaints: complaints.map(comp => comp.toObject()) 
-    });
-  } catch (error) {
-    console.error('Get complaints error:', error.message);
-    return res.status(500).json({ success: false, error: 'Failed to fetch complaints' });
-  }
-};
-
-exports.getComplaintById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const complaint = await Complaint.findById(id);
-    
-    if (!complaint) {
-      return res.status(404).json({ success: false, error: 'Complaint not found' });
-    }
-    
-    return res.json({
-      success: true,
-      complaint: complaint.toObject()
-    });
-  } catch (error) {
-    console.error('Get complaint by ID error:', error.message);
-    return res.status(500).json({ success: false, error: 'Failed to fetch complaint' });
-  }
-};
+console.log('✅ New complaint controller loaded');
+console.log('Controller functions:', Object.keys(exports));

@@ -5,26 +5,15 @@ const complaintSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   
-  // Media (Fixed to save URLs properly)
-  imageUrl: { type: String, default: '' },      // Save actual URL
+  // Media
+  imageUrl: { type: String, default: '' },
   audioUrl: { type: String, default: '' },
   videoUrl: { type: String, default: '' },
   
-  // Location (Fixed for lat/long)
+  // Location
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: {           // [longitude, latitude] format
-      type: [Number],       // Array of [lng, lat]
-      required: true,
-      validate: {
-        validator: function(coords) {
-          return coords.length === 2 && 
-                 typeof coords[0] === 'number' && 
-                 typeof coords[1] === 'number';
-        },
-        message: 'Coordinates must be [longitude, latitude]'
-      }
-    }
+    coordinates: { type: [Number], required: true } // [longitude, latitude]
   },
   
   // User Info
@@ -35,23 +24,33 @@ const complaintSchema = new mongoose.Schema({
   // Status & Tracking
   status: { 
     type: String, 
-    enum: ['pending', 'working', 'solved', 'deleted'], 
+    enum: ['pending', 'working', 'solved', 'fake', 'deleted'], 
     default: 'pending' 
   },
+  
+  // Admin Communication (NEW)
+  adminMessage: { type: String, default: '' },  // NEW FIELD
+  adminResponseAt: { type: Date, default: null }, // NEW FIELD
   
   // AI & Categorization
   category: { type: String, default: 'other' },
   department: { type: String, default: 'general' },
+  assignedDept: { type: String, default: 'general' }, // NEW FIELD for AI routing
+  priorityScore: { type: Number, default: 1 },
+  complaintCount: { type: Number, default: 1 },
   aiProcessed: { type: Boolean, default: false },
+  assignedOfficer: { type: String, default: '' },
   
   // Timestamps
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
-}, {
-  timestamps: true
 });
 
-// Ensure 2dsphere index for geospatial queries
+// Add indexes
 complaintSchema.index({ "location": "2dsphere" });
+complaintSchema.index({ "department": 1 });
+complaintSchema.index({ "status": 1 });
+complaintSchema.index({ "userId": 1 });
+complaintSchema.index({ "assignedDept": 1 }); // NEW INDEX
 
 module.exports = mongoose.model('Complaint', complaintSchema);

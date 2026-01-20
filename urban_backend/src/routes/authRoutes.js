@@ -9,6 +9,7 @@ router.post('/check-email', controller.checkEmail);
 router.post('/verify-otp', controller.verifyOtp);
 
 // ✅ Auth flows
+
 router.post('/signup', controller.signup);
 router.post('/login', controller.login);
 router.post('/forgot-password', controller.forgotPassword);
