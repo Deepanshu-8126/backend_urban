@@ -44,13 +44,33 @@ connectDB();
 console.log('✅ Database connection initiated');
 
 // ✅ HEALTH CHECK ROUTES
-app.get('/', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Smart City Backend - Live and Connected',
-    timestamp: new Date().toISOString(),
-    db_connected: require('mongoose').connection.readyState === 1
-  });
+app.get('/', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const isConnected = mongoose.connection.readyState === 1;
+    let counts = { users: 0, admins: 0 };
+
+    if (isConnected) {
+      const User = require('./models/User');
+      const Admin = require('./models/Admin');
+      counts.users = await User.countDocuments().catch(() => 0);
+      counts.admins = await Admin.countDocuments().catch(() => 0);
+    }
+
+    res.json({
+      status: 'OK',
+      message: 'Smart City Backend - Live and Connected',
+      timestamp: new Date().toISOString(),
+      db_connected: isConnected,
+      db_stats: counts
+    });
+  } catch (error) {
+    res.json({
+      status: 'PARTIAL',
+      message: 'Backend live, but diag failed',
+      error: error.message
+    });
+  }
 });
 
 app.get('/test', (req, res) => {
