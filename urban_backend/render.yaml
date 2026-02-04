@@ -4,6 +4,7 @@ services:
     env: node
     region: oregon
     plan: free
+    rootDir: .  # Current directory (urban_backend)
     buildCommand: npm install
     startCommand: npm start
     envVars:
