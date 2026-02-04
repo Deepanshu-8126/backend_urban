@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  phone: {
+    type: String,
+    required: [true, 'Phone number is required'],
+    trim: true
+  },
   password: {
     type: String,
     required: [true, 'Password is required'],
@@ -35,7 +40,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  
+
   // ✅ SOS EMERGENCY CONTACTS - UPDATED WITH EMAIL SUPPORT
   sosEmergencyContacts: [{
     name: {
@@ -62,7 +67,7 @@ const userSchema = new mongoose.Schema({
       default: false
     },
     verifiedAt: Date,
-    
+
     // ✅ Contact method preference
     contactMethod: {
       type: String,
@@ -75,7 +80,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // ✅ CORRECT PASSWORD HASHING (NO next() in async function)
-userSchema.pre('save', async function() {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 10);
 });

@@ -46,9 +46,10 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// ✅ ADMIN ONLY MIDDLEWARE
+// ✅ ADMIN ONLY MIDDLEWARE (Allows departmental admins)
 const adminOnly = (req, res, next) => {
-  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'Admin')) {
+  const role = req.user && req.user.role ? req.user.role.toLowerCase() : '';
+  if (!role.includes('admin')) {
     return res.status(403).json({ success: false, error: 'Access denied. Admin only.' });
   }
   next();

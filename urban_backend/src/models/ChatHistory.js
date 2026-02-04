@@ -85,7 +85,6 @@ const chatHistorySchema = new mongoose.Schema({
 
 // Indexes for efficient querying
 chatHistorySchema.index({ userId: 1, createdAt: -1 });
-chatHistorySchema.index({ sessionId: 1 });
 chatHistorySchema.index({ userEmail: 1 });
 chatHistorySchema.index({ hasActions: 1 });
 

@@ -81,20 +81,9 @@ app.get('/test', (req, res) => {
   });
 });
 
-// ✅ DIRECT DEBUG ROUTE (Regex Match to catch EVERYTHING)
+// ✅ LOGGING MIDDLEWARE
 app.use((req, res, next) => {
-  if (req.path.includes('/complaints/update-status/')) {
-    console.log(`🔥 FORCE INTERCEPT: ${req.method} ${req.path}`);
-    if (req.method === 'PATCH' || req.method === 'PUT' || req.method === 'POST') {
-      const controller = require('./controllers/complaintController');
-      // Extract ID manually from path
-      const parts = req.path.split('/');
-      const id = parts[parts.length - 1];
-      req.params.id = id;
-      console.log(`✅ MANUALLY EXTRACTED ID: ${id}`);
-      return controller.updateComplaintStatus(req, res);
-    }
-  }
+  console.log(`📥 [${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 

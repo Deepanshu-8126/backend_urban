@@ -22,12 +22,13 @@ class UrbanOS extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppProvider>(
-      builder: (context, provider, child) {
+    return Selector<AppProvider, bool>(
+      selector: (context, provider) => provider.isDarkMode,
+      builder: (context, isDarkMode, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Urban OS',
-          themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
           theme: ThemeData(
             primarySwatch: Colors.blue,
             brightness: Brightness.light,
@@ -39,10 +40,10 @@ class UrbanOS extends StatelessWidget {
             useMaterial3: true,
             primarySwatch: Colors.blue,
           ),
-          
-          home: const SplashScreen(),
+          home: child, // This prevents SplashScreen from being rebuilt
         );
       },
+      child: const SplashScreen(),
     );
   }
 }

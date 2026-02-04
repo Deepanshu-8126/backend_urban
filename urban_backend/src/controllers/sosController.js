@@ -47,12 +47,15 @@ class SOSController {
 
       const emergencyContacts = user.sosEmergencyContacts || [];
 
+      // ✅ ALLOW SOS EVEN WITHOUT CUSTOM CONTACTS (Permanent admin contact exists)
+      /*
       if (emergencyContacts.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Emergency contacts not configured. Please add at least 1 emergency contact first.'
+          error: 'Emergency contacts not configured.'
         });
       }
+      */
 
       const existingActiveSOS = await SOS.findOne({
         userId,
