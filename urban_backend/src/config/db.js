@@ -7,7 +7,9 @@ const connectDB = async () => {
     console.log('✅ MongoDB Connected');
   } catch (error) {
     console.error('❌ MongoDB Error:', error.message);
-    process.exit(1);
+    // In production, we don't want to crash the whole server if DB is temporarily down,
+    // especially on Render where it causes a 502 Bad Gateway immediately.
+    // process.exit(1); 
   }
 };
 
