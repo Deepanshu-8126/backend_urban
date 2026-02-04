@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getBudgetTracker } = require('../controllers/revenueController');
+const { getRevenue } = require('../controllers/revenueController');
 
-router.get('/budget', getBudgetTracker);
+router.get('/budget', getRevenue);
 
 module.exports = router;

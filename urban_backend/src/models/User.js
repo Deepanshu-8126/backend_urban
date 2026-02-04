@@ -1,23 +1,83 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { 
-    type: String, 
-    enum: ['citizen', 'admin', 'water-officer', 'electricity-officer', 'garbage-officer', 'staff'],
-    default: 'citizen'  // Small letter
+  name: {
+    type: String,
+    required: [true, 'Name is required']
   },
-  department: { 
-    type: String, 
-    enum: ['water', 'electricity', 'garbage', 'roads', 'health', 'general'],
-    default: 'general' 
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true
   },
-  ward: { type: String, default: '' },
-  isActive: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: 6
+  },
+  role: {
+    type: String,
+    enum: ['citizen', 'admin'],
+    default: 'citizen'
+  },
+  department: {
+    type: String,
+    default: 'general'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
+  
+  // ✅ SOS EMERGENCY CONTACTS - UPDATED WITH EMAIL SUPPORT
+  sosEmergencyContacts: [{
+    name: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      required: false // Made optional
+    },
+    email: {
+      type: String,
+      required: false,
+      lowercase: true,
+      trim: true
+    },
+    relationship: String,
+    primary: {
+      type: Boolean,
+      default: false
+    },
+    verified: {
+      type: Boolean,
+      default: false
+    },
+    verifiedAt: Date,
+    
+    // ✅ Contact method preference
+    contactMethod: {
+      type: String,
+      enum: ['sms', 'email', 'both'],
+      default: 'sms'
+    }
+  }]
+}, {
+  timestamps: true
+});
+
+// ✅ CORRECT PASSWORD HASHING (NO next() in async function)
+userSchema.pre('save', async function() {
+  if (!this.isModified('password')) return;
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 module.exports = mongoose.model('User', userSchema);

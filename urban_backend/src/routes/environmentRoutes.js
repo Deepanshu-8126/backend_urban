@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getEnvData } = require('../controllers/environmentController');
+const { getEnvironment } = require('../controllers/environmentController');
 
-router.get('/', getEnvData);
+router.get('/', getEnvironment);
 
 module.exports = router;

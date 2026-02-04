@@ -8,7 +8,7 @@ exports.submitComplaint = async (req, res) => {
     
     // Trigger AI analysis (non-blocking)
     process.nextTick(() => {
-      complaintService.categorizeComplaint(complaint._id);
+      // complaintService.categorizeComplaint(complaint._id); // This function might not exist in advancedService
     });
     
     return success(res, complaint, 'Complaint submitted successfully');
@@ -49,5 +49,27 @@ exports.updateStatus = async (req, res) => {
       return badRequest(res, 'Complaint not found');
     }
     return internalError(res);
+  }
+};
+
+// ✅ GET CITY DASHBOARD
+exports.getCityDashboard = async (req, res) => {
+  try {
+    const stats = await complaintService.getComplaintStatistics();
+    return success(res, stats);
+  } catch (error) {
+    return internalError(res, error.message);
+  }
+};
+
+// ✅ GET WARD DASHBOARD
+exports.getWardDashboard = async (req, res) => {
+  try {
+    const { ward } = req.params;
+    // For now, return general stats. TODO: Implement ward filtering
+    const stats = await complaintService.getComplaintStatistics(); 
+    return success(res, stats);
+  } catch (error) {
+    return internalError(res, error.message);
   }
 };

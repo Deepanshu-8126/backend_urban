@@ -7,8 +7,8 @@ const disasterSchema = new mongoose.Schema({
     default: () => new mongoose.Types.ObjectId().toString() // Auto-generate ID
   },
   
-  type: { type: String, enum: ['Earthquake', 'Flood', 'Fire', 'Storm'], required: true },
-  severity: { type: String, enum: ['Low', 'Medium', 'Critical'], default: 'Medium' },
+  type: { type: String, required: true },
+  severity: { type: String, enum: ['Low', 'Medium', 'Critical', 'High'], default: 'Medium' },
   location: { type: String, required: true },
   coordinates: { lat: Number, lng: Number },
   description: String,

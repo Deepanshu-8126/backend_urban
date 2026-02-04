@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { createOfficer, getAvailableOfficers } = require('../controllers/officerController');
+const { createOfficer, getOfficers } = require('../controllers/officerController');
 
 router.post('/', createOfficer);
-router.get('/available', getAvailableOfficers);
+router.get('/available', getOfficers);
 
 module.exports = router;

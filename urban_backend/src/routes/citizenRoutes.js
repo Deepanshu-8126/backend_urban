@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getCertificates, createCertificate } = require('../controllers/citizenController');
+const { getCitizens, createCitizen } = require('../controllers/citizenController');
 
-router.get('/certificates', getCertificates);
-router.post('/certificates', createCertificate);
+router.get('/certificates', getCitizens);
+router.post('/certificates', createCitizen);
 
 module.exports = router;

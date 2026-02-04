@@ -3,17 +3,17 @@ const mongoose = require('mongoose');
 const complaintSchema = new mongoose.Schema({
   // Basic Info
   title: { type: String, required: true },
-  description: { type: String, default: '' },
-  
-  // Media
-  imageUrl: { type: String, default: '' },
+  description: { type: String, required: true },
+  imageUrl: { type: String, default: '' },        // Legacy support
+  images: { type: [String], default: [] },        // ✅ Multiple images support
   audioUrl: { type: String, default: '' },
   videoUrl: { type: String, default: '' },
   
   // Location
   location: {
     type: { type: String, default: 'Point' },
-    coordinates: { type: [Number], required: true } // [longitude, latitude]
+    coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    address: { type: String, default: '' } // NEW FIELD for human-readable address
   },
   
   // User Info
@@ -34,12 +34,20 @@ const complaintSchema = new mongoose.Schema({
   
   // AI & Categorization
   category: { type: String, default: 'other' },
+  subType: { type: String, default: '' }, // NEW FIELD
   department: { type: String, default: 'general' },
   assignedDept: { type: String, default: 'general' }, // NEW FIELD for AI routing
   priorityScore: { type: Number, default: 1 },
   complaintCount: { type: Number, default: 1 },
   aiProcessed: { type: Boolean, default: false },
   assignedOfficer: { type: String, default: '' },
+  
+  // Validation Status
+  validationStatus: { 
+    type: String, 
+    enum: ['valid', 'mismatch', 'uncertain'], 
+    default: 'uncertain' 
+  }, // NEW FIELD
   
   // Timestamps
   createdAt: { type: Date, default: Date.now },
