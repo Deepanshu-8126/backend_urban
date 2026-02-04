@@ -64,8 +64,9 @@ console.log('✅ Database connection initiated');
 app.get('/', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'Server Health Check - Working!',
-    timestamp: new Date().toISOString()
+    message: 'Smart City Backend - Live and Connected',
+    timestamp: new Date().toISOString(),
+    db_connected: require('mongoose').connection.readyState === 1
   });
 });
 

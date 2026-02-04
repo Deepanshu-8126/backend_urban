@@ -2,8 +2,9 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    // Modern connection without deprecated options
-    await mongoose.connect(process.env.MONGO_URI);
+    // Supports both MONGO_URI and MONGODB_URI (for Render compatibility)
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    await mongoose.connect(uri);
     console.log('✅ MongoDB Connected');
   } catch (error) {
     console.error('❌ MongoDB Error:', error.message);
