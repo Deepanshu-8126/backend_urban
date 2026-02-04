@@ -9,7 +9,7 @@ class BusTrackerScreen extends StatelessWidget {
       appBar: AppBar(title: const Text("City Bus Live Tracker")),
       body: Column(
         children: [
-          // Route Map Placeholder
+          
           Container(
             height: 250,
             margin: const EdgeInsets.all(15),

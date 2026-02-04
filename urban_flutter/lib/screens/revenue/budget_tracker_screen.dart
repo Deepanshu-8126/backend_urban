@@ -15,7 +15,7 @@ class BudgetTrackerScreen extends StatelessWidget {
             const Text("City Financial Health", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
 
-            // Summary Cards
+            
             Row(
               children: [
                 _buildFinanceCard("Total Budget", "₹500 Cr", Colors.blue),
@@ -28,7 +28,7 @@ class BudgetTrackerScreen extends StatelessWidget {
             const Text("Department-wise Spending", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
 
-            // Budget Bars
+            
             _buildBudgetBar("Infrastructure", 0.85, "₹120 Cr", Colors.indigo),
             _buildBudgetBar("Public Health", 0.60, "₹80 Cr", Colors.teal),
             _buildBudgetBar("Education", 0.45, "₹50 Cr", Colors.amber),

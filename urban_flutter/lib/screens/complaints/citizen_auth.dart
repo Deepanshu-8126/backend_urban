@@ -18,7 +18,7 @@ class _CitizenAuthState extends State<CitizenAuth> {
       _showMsg("Email aur Password bharna zaroori hai!");
       return;
     }
-    // Save Login State
+    
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', true);
     widget.onLoginSuccess();

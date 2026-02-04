@@ -11,7 +11,7 @@ class CrimeAnalyticsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Analytics Chart Placeholder
+            
             Container(
               height: 220,
               decoration: BoxDecoration(

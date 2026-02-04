@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:urban_flutter/core/app_provider.dart';
-import 'package:urban_flutter/core/voice_service.dart';
-import 'citizen_auth.dart';
+import '../auth/login_screen.dart';
 import 'citizen_form.dart';
 import 'admin_view.dart';
 
@@ -21,12 +19,19 @@ class _ComplaintsMainState extends State<ComplaintsMain> {
     _checkLoginStatus();
   }
 
-  // Persistent Login Logic
+  
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    bool isAdmin = prefs.getBool('isAdmin') ?? false;
+    
     setState(() {
-      view = isLoggedIn ? "citizen_form" : "role_selection";
+      if (isLoggedIn) {
+        view = isAdmin ? "admin_view" : "citizen_form";
+      } else {
+        view = "role_selection";
+      }
     });
   }
 
@@ -34,10 +39,11 @@ class _ComplaintsMainState extends State<ComplaintsMain> {
   Widget build(BuildContext context) {
     if (view == "loading") return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (view == "role_selection") return _buildRoleSelection();
-    if (view == "citizen_auth") return CitizenAuth(onLoginSuccess: () => setState(() => view = "citizen_form"));
-    if (view == "admin_login") return _buildAdminLogin();
+    
+    
     if (view == "citizen_form") return const CitizenForm();
-    return const AdminView();
+    if (view == "admin_view") return const AdminView();
+    return const AdminView(); 
   }
 
   Widget _buildRoleSelection() {
@@ -47,9 +53,17 @@ class _ComplaintsMainState extends State<ComplaintsMain> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _btn("Login as Citizen", Colors.blue, () => setState(() => view = "citizen_auth")),
-            const SizedBox(height: 20),
-            _btn("Login as Admin", Colors.red, () => setState(() => view = "admin_login")),
+            _btn("Login to Continue", Colors.blue, () {
+               Navigator.push(
+                 context, 
+                 MaterialPageRoute(builder: (c) => LoginScreen(
+                   onLoginSuccess: () {
+                     Navigator.pop(context);
+                     _checkLoginStatus();
+                   }
+                 ))
+               );
+            }),
           ],
         ),
       ),
@@ -60,22 +74,4 @@ class _ComplaintsMainState extends State<ComplaintsMain> {
     style: ElevatedButton.styleFrom(backgroundColor: c, minimumSize: const Size(250, 55)),
     onPressed: p, child: Text(t, style: const TextStyle(color: Colors.white)),
   );
-
-  Widget _buildAdminLogin() {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Admin Access")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const TextField(decoration: InputDecoration(labelText: "Admin ID", border: OutlineInputBorder())),
-            const SizedBox(height: 15),
-            const TextField(decoration: InputDecoration(labelText: "Password", border: OutlineInputBorder()), obscureText: true),
-            const SizedBox(height: 20),
-            _btn("Verify Admin", Colors.red, () => setState(() => view = "admin_view")),
-          ],
-        ),
-      ),
-    );
-  }
 }

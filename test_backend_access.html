@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .test-box { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    
+    <div class="test-box">
+        <h3>Configuration</h3>
+        <p>Backend IP: <strong>10.102.250.157</strong></p>
+        <p>Backend Port: <strong>3000</strong></p>
+    </div>
+
+    <div class="test-box">
+        <button onclick="testHealth()">Test Backend Health</button>
+        <button onclick="testAuth()">Test Auth Endpoint</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://10.102.250.157:3000';
+        
+        async function testHealth() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing backend health...</p>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                results.innerHTML = `<p class="success">✅ Backend is accessible!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML = `<p class="error">❌ Connection failed: ${error.message}</p>
+                <p>Possible issues:</p>
+                <ul>
+                    <li>Backend not running</li>
+                    <li>Firewall blocking connection</li>
+                    <li>Wrong IP address</li>
+                    <li>Not on same WiFi network</li>
+                </ul>`;
+            }
+        }
+
+        async function testAuth() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing auth endpoint...</p>';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/v1/auth/check-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@example.com' })
+                });
+                
+                const data = await response.json();
+                results.innerHTML = `<p class="success">✅ Auth endpoint accessible!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                results.innerHTML = `<p class="error">❌ Auth endpoint failed: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

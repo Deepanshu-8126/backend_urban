@@ -15,7 +15,7 @@ class TrafficPredictionScreen extends StatelessWidget {
             const Text("Next 2 Hours Forecast", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 15),
 
-            // AI Prediction Graph Placeholder
+            
             Container(
               height: 200,
               decoration: BoxDecoration(

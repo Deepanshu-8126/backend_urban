@@ -15,7 +15,7 @@ class TrafficCamScreen extends StatelessWidget {
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
         ),
-        itemCount: 8, // 8 dummy cams
+        itemCount: 8, 
         itemBuilder: (context, i) => Container(
           decoration: BoxDecoration(
             color: Colors.black,
@@ -30,7 +30,7 @@ class TrafficCamScreen extends StatelessWidget {
               ),
               const Positioned(
                 top: 5, right: 5,
-                child: CircleAvatar(radius: 4, backgroundColor: Colors.red), // Live dot
+                child: CircleAvatar(radius: 4, backgroundColor: Colors.red), 
               )
             ],
           ),

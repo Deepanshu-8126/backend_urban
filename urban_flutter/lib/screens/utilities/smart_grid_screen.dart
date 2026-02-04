@@ -6,7 +6,7 @@ import '../../core/constants.dart';
 class SmartGridScreen extends StatelessWidget {
   const SmartGridScreen({super.key});
 
-  // Backend se Energy Data mangwane ka function
+  
   Future<Map<String, dynamic>> fetchEnergyData() async {
     try {
       final response = await http.get(Uri.parse(AppConstants.energyEndpoint));
@@ -15,7 +15,7 @@ class SmartGridScreen extends StatelessWidget {
       }
       throw Exception('Server Error');
     } catch (e) {
-      // Fake data agar backend offline ho (Prototype ke liye)
+      
       return {
         "total_load": "485 MW",
         "status": "Stable",
@@ -50,8 +50,8 @@ class SmartGridScreen extends StatelessWidget {
                 const Text("Sector-wise Consumption",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),
-                // Sector bars software-based monitoring
-                ...(data['sectors'] as List).map((s) => _buildUsageBar(s['name'], s['usage'])).toList(),
+                
+                ...(data['sectors'] as List).map((s) => _buildUsageBar(s['name'], s['usage'])),
                 const SizedBox(height: 30),
                 _buildEfficiencyCard(),
               ],

@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ✅ Persistence ke liye
-import '../../widgets/kpi_card.dart';
-import '../citizen/certificate_screen.dart';
-import '../citizen/hall_booking_screen.dart';
-import '../disaster/disaster_control_screen.dart';
-import '../health/aqi_monitor_screen.dart';
-import '../property/property_tax_screen.dart';
-import '../traffic/traffic_cam_screen.dart';
-import '../traffic/parking_locator.dart';
-import '../complaints/war_room_screen.dart';
-import '../ChatBot/chat_bot_screen.dart';
-import '../traffic/traffic_prediction_screen.dart';
-import '../revenue/budget_tracker_screen.dart';
-import '../disaster/sos_feed_screen.dart';
-import '../complaints/heatmap_screen.dart';
-import '../admin/staff_monitor_screen.dart';
-import '../traffic/bus_tracker_screen.dart';
-import '../utilities/smart_grid_screen.dart';
-import '../safety/crime_analytics_screen.dart';
-import '../safety/patrol_tracker_screen.dart';
-import '../health/blood_bank_screen.dart';
-import '../complaints/complaints_main.dart';
+import 'package:provider/provider.dart';
+import 'dart:io'; 
+import 'dart:ui'; 
+import '../../core/app_provider.dart';
 import 'package:urban_flutter/core/api_service.dart';
+
+import '../disaster/citizen_sos_screen.dart';
+import '../health/aqi_monitor_screen.dart';
+import '../property/tax_calculator_screen.dart';
+import '../revenue/budget_tracker_screen.dart';
+import '../ChatBot/chat_bot_screen.dart';
+import '../complaints/heatmap_screen.dart';
+import '../complaints/grievance_map_screen.dart';
+import '../complaints/admin_view.dart';
+import '../auth/login_screen.dart';
+import '../profile/user_profile_screen.dart';
+import '../settings/settings_screen.dart'; 
+import '../notifications/notifications_screen.dart';
+import '../admin/city_monitor/city_monitor_screen.dart'; 
+import '../intelligence/intelligence_dashboard.dart'; 
 
 class AdminWarRoom extends StatefulWidget {
   const AdminWarRoom({super.key});
@@ -29,194 +26,516 @@ class AdminWarRoom extends StatefulWidget {
   State<AdminWarRoom> createState() => _AdminWarRoomState();
 }
 
-class _AdminWarRoomState extends State<AdminWarRoom> {
+class _AdminWarRoomState extends State<AdminWarRoom> with SingleTickerProviderStateMixin {
   String selectedCategory = "All";
   String searchQuery = "";
-  final List<String> categories = ["All", "Complaints", "Disaster", "Property", "Traffic", "Health", "Citizen", "Safety", "Admin"];
+  late AnimationController _controller;
+  final List<String> categories = ["All", "Complaints", "Admin", "Disaster", "Property", "AI"];
+  DateTime? currentBackPressTime;
+  final ScrollController _scrollController = ScrollController();
 
-  // ✅ LOGIC: Profile aur Logout ka popup
-  void _showProfile(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String name = prefs.getString('firstName') ?? "Guest";
-    String surname = prefs.getString('surname') ?? "User";
-    String phone = prefs.getString('contact') ?? "N/A";
-    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+    _controller.forward();
+  }
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("ACCOUNT PROFILE", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
-            const Divider(),
-            ListTile(
-              leading: const CircleAvatar(backgroundColor: Colors.blue, child: Icon(Icons.person, color: Colors.white)),
-              title: Text("$name $surname", style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(phone),
-            ),
-            const SizedBox(height: 20),
-            if (isLoggedIn)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, minimumSize: const Size(double.infinity, 50)),
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text("LOGOUT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                onPressed: () async {
-                  await ApiService.logout();
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (c) => const AdminWarRoom()));
-                },
-              )
-            else
-              ElevatedButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const ComplaintsMain())),
-                child: const Text("GO TO LOGIN"),
-              ),
-          ],
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   final List<Map<String, dynamic>> allFeatures = [
-    {"title": "Complaints Hub", "cat": "Complaints", "icon": Icons.campaign, "color": Colors.red, "page": const ComplaintsMain()},
-    {"title": "Grievance Map", "cat": "Complaints", "icon": Icons.map, "color": Colors.redAccent, "page": const ComplaintsHeatmap()},
-    {"title": "Resolution Stats", "cat": "Complaints", "icon": Icons.bar_chart, "color": Colors.red, "page": null},
-    {"title": "SOS Center", "cat": "Disaster", "icon": Icons.emergency_share, "color": Colors.red, "page": const SOSFeedScreen()},
-    {"title": "Flood Alert", "cat": "Disaster", "icon": Icons.flood, "color": Colors.blue, "page": const DisasterControlScreen()},
+    
+    {"title": "Complaints Hub", "cat": "Complaints", "icon": Icons.campaign, "color": Colors.indigoAccent, "page": const AdminView()},
+    {"title": "Grievance Map", "cat": "Complaints", "icon": Icons.map, "color": Colors.blue, "page": const GrievanceMapScreen()},
+    {"title": "Live Heatmap", "cat": "Complaints", "icon": Icons.blur_on, "color": Colors.orangeAccent, "page": const HeatmapScreen()},
+    {"title": "AQI Monitor", "cat": "Admin", "icon": Icons.air, "color": Colors.teal, "page": const AqiMonitorScreen()},
+    {"title": "SOS Controller", "cat": "Disaster", "icon": Icons.emergency_share, "color": Colors.redAccent, "page": const CitizenSOSScreen()},
     {"title": "Budget Tracker", "cat": "Property", "icon": Icons.account_balance_wallet, "color": Colors.blueGrey, "page": const BudgetTrackerScreen()},
-    {"title": "Property Tax", "cat": "Property", "icon": Icons.payments, "color": Colors.green, "page": const PropertyTaxScreen()},
-    {"title": "Traffic Cam Live", "cat": "Traffic", "icon": Icons.videocam, "color": Colors.indigo, "page": const TrafficCamScreen()},
-    {"title": "Smart Parking", "cat": "Traffic", "icon": Icons.local_parking, "color": Colors.indigoAccent, "page": const SmartParkingScreen()},
-    {"title": "Bus Tracker", "cat": "Traffic", "icon": Icons.directions_bus, "color": Colors.blueGrey, "page": const BusTrackerScreen()},
-    {"title": "AI Traffic Forecast", "cat": "Traffic", "icon": Icons.auto_graph, "color": Colors.deepPurple, "page": const TrafficPredictionScreen()},
-    {"title": "AQI Monitor", "cat": "Health", "icon": Icons.air, "color": Colors.teal, "page": const AqiMonitorScreen()},
-    {"title": "Blood Bank", "cat": "Health", "icon": Icons.bloodtype, "color": Colors.red, "page": const BloodBankScreen()},
-    {"title": "Crime Analytics", "cat": "Safety", "icon": Icons.security, "color": Colors.redAccent, "page": const CrimeAnalyticsScreen()},
-    {"title": "Patrol Track", "cat": "Safety", "icon": Icons.nightlight_round, "color": Colors.indigo, "page": const PatrolTrackerScreen()},
-    {"title": "Certificates", "cat": "Citizen", "icon": Icons.assignment, "color": Colors.amber, "page": const CertificateScreen()},
-    {"title": "Hall Booking", "cat": "Citizen", "icon": Icons.home_work, "color": Colors.deepOrange, "page": const HallBookingScreen()},
-    {"title": "CityBrain AI", "cat": "All", "icon": Icons.psychology, "color": Colors.deepPurple, "page": const CityBrainBot()},
-    {"title": "Staff Monitor", "cat": "Admin", "icon": Icons.groups, "color": Colors.indigo, "page": const StaffMonitorScreen()},
-    {"title": "Energy Grid", "cat": "All", "icon": Icons.bolt, "color": Colors.yellow[800], "page": const SmartGridScreen()},
+    {"title": "Property Tax", "cat": "Property", "icon": Icons.payments, "color": Colors.green, "page": const TaxCalculatorScreen()},
+    {"title": "City Monitor", "cat": "Admin", "icon": Icons.monitor_heart, "color": Colors.red, "page": const CityMonitorScreen()},
+    {"title": "City Intelligence", "cat": "AI", "icon": Icons.psychology_outlined, "color": Colors.purple, "page": const IntelligenceDashboardScreen()}, 
+    {"title": "CityBrain AI", "cat": "AI", "icon": Icons.psychology, "color": Colors.deepPurpleAccent, "page": const CityBrainBot()},
   ];
 
   @override
   Widget build(BuildContext context) {
-    final filtered = allFeatures.where((f) {
-      bool matchesCat = selectedCategory == "All" || f['cat'] == selectedCategory;
-      bool matchesSearch = f['title'].toLowerCase().contains(searchQuery.toLowerCase());
-      return matchesCat && matchesSearch;
-    }).toList();
+    final isDark = Provider.of<AppProvider>(context).isDarkMode;
 
-    return Scaffold(
-      appBar: AppBar(
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.account_circle, size: 30),
-              onPressed: () => _showProfile(context), // ✅ Profile show karne ka logic
-            ),
-          ],
-          title: const Text("URBAN OS COMMAND CENTER"),
-          centerTitle: true
-      ),
-      body: Column(
-        children: [
-          _buildSOSAlert(),
-          _buildSearchAndFilters(),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.85,
-              ),
-              itemCount: filtered.length,
-              itemBuilder: (context, i) => KpiCard(
-                title: filtered[i]['title'],
-                icon: filtered[i]['icon'],
-                color: filtered[i]['color'],
-                onTap: () {
-                  if (filtered[i]['page'] != null) {
-                    Navigator.push(context, MaterialPageRoute(builder: (c) => filtered[i]['page']));
-                  } else {
-                    _showPlaceholder(context, filtered[i]['title']);
-                  }
-                },
-              ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final now = DateTime.now();
+        if (currentBackPressTime == null || 
+            now.difference(currentBackPressTime!) > const Duration(seconds: 2)) {
+          currentBackPressTime = now;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Press back again to exit app'), duration: Duration(seconds: 1)),
+          );
+          return;
+        }
+        Navigator.of(context).pop(); 
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [
+                    const Color(0xFF0F172A), 
+                    const Color(0xFF1E293B), 
+                    const Color(0xFF000000), 
+                  ]
+                : [
+                    const Color(0xFFF1F5F9), 
+                    const Color(0xFFE2E8F0), 
+                    const Color(0xFFFFFFFF), 
+                  ],
             ),
           ),
-        ],
+          child: SafeArea(
+            bottom: false,
+            child: NestedScrollView(
+              controller: _scrollController,
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                _buildSliverAppBar(innerBoxIsScrolled, isDark),
+              ],
+              body: _buildBody(isDark),
+            ),
+          ),
+        ),
+        endDrawer: _buildModernDrawer(isDark),
       ),
     );
   }
 
-  Widget _buildSOSAlert() {
-    return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.red.shade900, borderRadius: BorderRadius.circular(15)),
-      child: Row(
-        children: [
-          const Icon(Icons.emergency_share, color: Colors.white, size: 30),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("LIVE SOS ALERT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Text("Medical: Ward 15 | 2m ago", style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ],
+  Widget _buildSliverAppBar(bool innerBoxIsScrolled, bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 280.0, 
+      collapsedHeight: 80,
+      toolbarHeight: 80,
+      floating: false,
+      pinned: true,
+      backgroundColor: Colors.transparent, 
+      elevation: 0,
+      stretch: true,
+      flexibleSpace: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: FlexibleSpaceBar(
+            titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+            centerTitle: false,
+            title: AnimatedOpacity(
+              opacity: innerBoxIsScrolled ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: Text("Command Center", 
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87, 
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold
+                )
+              ),
+            ),
+            background: _buildHeaderContent(isDark),
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle, 
+              color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)
+            ),
+            child: Icon(
+              isDark ? Icons.wb_sunny : Icons.nightlight_round, 
+              color: isDark ? Colors.cyanAccent : Colors.indigo, 
+              size: 20
             ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SOSFeedScreen())),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
-            child: const Text("VIEW"),
+          onPressed: () => Provider.of<AppProvider>(context, listen: false).toggleTheme(),
+        ),
+        const SizedBox(width: 8),
+        Builder(
+          builder: (context) => IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle, 
+                color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)
+              ),
+              child: Icon(Icons.grid_view_rounded, color: isDark ? Colors.white : Colors.black87, size: 20),
+            ),
+            onPressed: () => Scaffold.of(context).openEndDrawer(),
+          ),
+        ),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildHeaderContent(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 80, 24, 20), 
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.withOpacity(0.2), Colors.transparent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+                   Consumer<AppProvider>(
+                    builder: (context, provider, _) {
+                      ImageProvider? backgroundImage;
+                      if (provider.userProfileImage != null && provider.userProfileImage!.isNotEmpty) {
+                        if (provider.userProfileImage!.contains('http')) {
+                           backgroundImage = NetworkImage(provider.userProfileImage!);
+                        } else if (provider.userProfileImage!.contains('/') || provider.userProfileImage!.contains('\\')) {
+                           
+                           backgroundImage = FileImage(File(provider.userProfileImage!));
+                        } else {
+                           
+                           backgroundImage = NetworkImage("${ApiService.baseUrl.replaceAll('/api/v1', '')}${provider.userProfileImage}?t=${DateTime.now().millisecondsSinceEpoch}");
+                        }
+                      }
+
+                      return Row(
+                        children: [
+                           CircleAvatar(
+                             radius: 26,
+                             backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                             backgroundImage: backgroundImage,
+                             child: backgroundImage == null
+                               ? Text(
+                                   (provider.userName ?? "A")[0].toUpperCase(), 
+                                   style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 16)
+                                 )
+                               : null,
+                           ),
+                   const SizedBox(width: 14),
+                   Expanded(
+                     child: Column(
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         Text(
+                          "Welcome Admin,", 
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54, 
+                            fontSize: 14, 
+                            letterSpacing: 1.0
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                         Text(
+                          provider.userName ?? "City Controller", 
+                          style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87, 
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 20,
+                            letterSpacing: -0.5
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                       ],
+                     ),
+                   )
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.08) : Colors.white.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)
+                  ),
+                  boxShadow: [
+                    if (!isDark) const BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))
+                  ]
+                ),
+                child: TextField(
+                  onChanged: (v) => setState(() => searchQuery = v),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  cursorColor: Colors.blueAccent,
+                  decoration: InputDecoration(
+                    hintText: "Search System Modules...",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38
+                    ),
+                    icon: Icon(Icons.search, color: isDark ? Colors.white.withOpacity(0.4) : Colors.black38),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14), 
+                  ),
+                ),
+              ),
+            ),
           )
         ],
       ),
     );
   }
 
-  Widget _buildSearchAndFilters() {
+  Widget _buildBody(bool isDark) {
+    final filtered = allFeatures.where((f) {
+      bool matchesCat = selectedCategory == "All" || f['cat'] == selectedCategory;
+      bool matchesSearch = f['title'].toLowerCase().contains(searchQuery.toLowerCase());
+      return matchesCat && matchesSearch;
+    }).toList();
+
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          child: TextField(
-            onChanged: (v) => setState(() => searchQuery = v),
-            decoration: InputDecoration(
-              hintText: "Search 200+ Features...",
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-              filled: true,
-              fillColor: Colors.grey.withOpacity(0.1),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 40,
+        
+        Container(
+          height: 60,
+          margin: const EdgeInsets.only(bottom: 10),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            itemBuilder: (ctx, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: ChoiceChip(
-                label: Text(categories[i]),
-                selected: selectedCategory == categories[i],
-                onSelected: (bool selected) => setState(() => selectedCategory = categories[i]),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (ctx, i) {
+               bool isSelected = selectedCategory == categories[i];
+               return AnimatedContainer(
+                 duration: const Duration(milliseconds: 200),
+                 margin: const EdgeInsets.only(right: 12),
+                 child: FilterChip(
+                   label: Text(categories[i]),
+                   selected: isSelected,
+                   onSelected: (bool selected) => setState(() => selectedCategory = categories[i]),
+                   backgroundColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+                   selectedColor: Colors.blueAccent,
+                   checkmarkColor: Colors.white,
+                   elevation: isSelected ? 4 : 0,
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
+                   labelStyle: TextStyle(
+                     color: isSelected ? Colors.white : (isDark ? Colors.white60 : Colors.black54),
+                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                     fontSize: 13
+                   ),
+                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                 ),
+               );
+            },
+          ),
+        ),
+
+        
+        Expanded(
+          child: filtered.isEmpty 
+          ? Center(child: Text("No modules found", style: TextStyle(color: isDark ? Colors.white54 : Colors.black45)))
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final double width = constraints.maxWidth;
+                int crossAxisCount = width > 900 ? 4 : (width > 600 ? 3 : 2);
+                double aspectRatio = width > 900 ? 1.25 : (width > 600 ? 1.15 : 1.1);
+                
+                return GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount, 
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: aspectRatio,
+                  ),
+                  itemCount: filtered.length,
+                  physics: const BouncingScrollPhysics(), 
+                  itemBuilder: (context, i) {
+               return AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 50 * (1 - _controller.value)),
+                    child: Opacity(
+                      opacity: _controller.value,
+                      child: child,
+                    ),
+                  );
+                },
+                child: _buildGlassCard(filtered[i], isDark),
+              );
+            },
+          );
+        }
+      ),
+    ),
+      ],
+    );
+  }
+
+  Widget _buildGlassCard(Map<String, dynamic> item, bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        if (item['page'] != null) {
+          Navigator.push(context, MaterialPageRoute(builder: (c) => item['page']));
+        } else {
+          _showPlaceholder(context, item['title']);
+        }
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+                width: 1.5
               ),
+              boxShadow: [
+                 BoxShadow(
+                   color: item['color'].withOpacity(isDark ? 0.1 : 0.2), 
+                   blurRadius: 20, 
+                   spreadRadius: -5,
+                   offset: const Offset(0, 10)
+                 )
+              ]
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: item['color'].withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item['icon'], color: item['color'], size: 36),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  item['title'],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                 Text(
+                  item['cat'].toString().toUpperCase(),
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.grey,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildModernDrawer(bool isDark) {
+    return Container(
+      width: 280,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 30)],
+        border: Border(left: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 60),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              "System Menu", 
+              style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.grey, 
+                fontSize: 12, 
+                fontWeight: FontWeight.bold, 
+                letterSpacing: 1.5
+              )
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildDrawerItem(Icons.person_outline, "My Profile", isDark, () {
+             Navigator.pop(context); 
+             Navigator.push(context, MaterialPageRoute(builder: (c) => const UserProfileScreen()));
+          }),
+          _buildDrawerItem(Icons.settings_outlined, "Settings", isDark, () {
+             Navigator.pop(context);
+             Navigator.push(context, MaterialPageRoute(builder: (c) => const SettingsScreen())); 
+          }),
+          _buildDrawerItem(Icons.notifications_outlined, "Notifications", isDark, () {
+             Navigator.pop(context);
+             Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen())); 
+          }),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: InkWell(
+              onTap: () async {
+                 await ApiService.logout();
+                 if (context.mounted) {
+                   Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (c) => const LoginScreen()),
+                    (route) => false,
+                   );
+                 }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                    SizedBox(width: 8),
+                    Text("Secure Logout", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, bool isDark, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blueAccent),
+      title: Text(title, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 15)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      onTap: onTap,
     );
   }
 

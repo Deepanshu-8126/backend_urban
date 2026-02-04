@@ -15,7 +15,7 @@ class BloodBankScreen extends StatelessWidget {
         children: [
           _buildBloodTile("A+", "12 Units", Colors.red),
           _buildBloodTile("B+", "08 Units", Colors.redAccent),
-          _buildBloodTile("O-", "02 Units", Colors.orange), // Low stock alert
+          _buildBloodTile("O-", "02 Units", Colors.orange), 
           _buildBloodTile("AB+", "15 Units", Colors.red),
         ],
       ),

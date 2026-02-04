@@ -11,7 +11,7 @@ class ComplaintsWarRoom extends StatefulWidget {
 }
 
 class _ComplaintsWarRoomState extends State<ComplaintsWarRoom> {
-  // Pull-to-refresh ke liye logic
+  
   Future<http.Response> _fetchComplaints() {
     return http.get(Uri.parse(AppConstants.complaintsEndpoint));
   }
@@ -29,7 +29,7 @@ class _ComplaintsWarRoomState extends State<ComplaintsWarRoom> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError || snapshot.data?.statusCode != 200) {
-              return Center(
+              return const Center(
                 child: Text("Server Error: Check if ${AppConstants.baseUrl} is live"),
               );
             }
