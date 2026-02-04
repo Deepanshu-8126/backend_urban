@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: urban-os-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: .  # Current directory (urban_backend)
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend-url.com
