@@ -1,0 +1,31 @@
+# Flutter build
+urban_flutter/build/
+urban_flutter/.dart_tool/
+urban_flutter/.flutter-plugins
+urban_flutter/.flutter-plugins-dependencies
+urban_flutter/.pub-cache/
+urban_flutter/.pub/
+
+# Node modules
+node_modules/
+urban_backend/node_modules/
+urban_analytics/node_modules/
+
+# Environment variables
+.env
+*.env
+urban_backend/.env
+urban_analytics/.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+urban_backend/logs/
+
+# Uploads
+urban_backend/uploads/
