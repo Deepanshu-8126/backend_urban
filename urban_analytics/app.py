@@ -9,18 +9,33 @@ import uvicorn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import os
+from fastapi.middleware.cors import CORSMiddleware
+
+# ... earlier imports ...
+
 app = FastAPI()
 
-# 1. DATABASE CONNECTION (Local MongoDB)
+# ✅ Add CORS support
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 1. DATABASE CONNECTION
 complaints_col = None
 chats_col = None
 
 try:
-    MONGO_URI = "mongodb://localhost:27017/cityos"
+    # Use environment variable for MongoDB (for Render compatibility)
+    MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI") or "mongodb://localhost:27017/cityos"
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
     client.server_info()
     
-    db = client['cityos']
+    db = client.get_database() # Automatically gets DB from URI if specified, else generic
     complaints_col = db['complaints']
     chats_col = db['chats']
     logger.info("✅ MongoDB Connected!")

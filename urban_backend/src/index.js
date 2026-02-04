@@ -12,30 +12,13 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 console.log('✅ Body parser configured');
 
 // ✅ CORS CONFIGURATION
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    // Allow any localhost or 127.0.0.1 or LAN IP origin
-    if (origin.startsWith('http://localhost') ||
-      origin.startsWith('http://127.0.0.1') ||
-      origin.startsWith('http://10.102.250.157') || // ✅ Allow LAN IP
-      origin.startsWith('http://10.102.250.35') ||  // ✅ NEW IP
-      origin === 'null') {
-      return callback(null, true);
-    }
-    // Check against allowed origins in env
-    const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    }
-    // Default: Allow if not strictly blocked (or block it)
-    console.log('Blocked by CORS:', origin);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true
-};
-app.use(cors(corsOptions));
+// ✅ CORS CONFIGURATION
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 console.log('✅ CORS configured');
 
 // ✅ MULTER CONFIGURATION
