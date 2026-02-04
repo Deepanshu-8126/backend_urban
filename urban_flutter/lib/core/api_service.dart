@@ -8,14 +8,27 @@ import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   
+  // 🔧 TOGGLE THIS FOR PRODUCTION vs DEVELOPMENT
+  // Set to false: Uses local backend (192.168.1.18:3000)
+  // Set to true: Uses Render backend (for APK builds)
+  static const bool IS_PRODUCTION = true; // ✅ SET TO TRUE FOR APK BUILD
+  
   static final String baseUrl = _computeBaseUrl(); 
 
   static String _computeBaseUrl() {
+    // Production Render URL
+    const String renderUrl = "https://urban-backend-28dc.onrender.com/api/v1";
     
-    const String renderUrl = "https://backend-urban-l6lh.onrender.com/api/v1";
+    // Local development URLs
     const String localUrl = "http://localhost:3000/api/v1";
     const String localNetworkUrl = "http://192.168.1.18:3000/api/v1";
     
+    // Use production URL if IS_PRODUCTION is true
+    if (IS_PRODUCTION) {
+      return renderUrl;
+    }
+    
+    // Otherwise use local URLs based on platform
     if (kIsWeb) {
       return localUrl;
     }
