@@ -263,7 +263,32 @@ app.use((req, res) => {
 
 // ✅ START SERVER
 const startServer = () => {
-  const server = app.listen(PORT, '0.0.0.0', () => {
+  const http = require('http');
+  const server = http.createServer(app);
+  const io = require('socket.io')(server, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
+
+  // Global socket attachment
+  app.set('socketio', io);
+
+  io.on('connection', (socket) => {
+    console.log('🔌 New Client Connected:', socket.id);
+
+    socket.on('join', (userId) => {
+      socket.join(userId);
+      console.log(`👤 User ${userId} joined their room`);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔌 Client Disconnected');
+    });
+  });
+
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🌍 Health Check: http://localhost:${PORT}/`);
     console.log(`🌍 Test Route: http://localhost:${PORT}/test`);

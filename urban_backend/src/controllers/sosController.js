@@ -1,6 +1,7 @@
 const SOS = require('../models/sosModel');
 const User = require('../models/User');
 const Admin = require('../models/Admin'); // ✅ Import Admin Model
+const { sendNotification } = require('../utils/notificationService');
 
 class SOSController {
   constructor() {
@@ -94,6 +95,15 @@ class SOSController {
 
       // ✅ SEND EMERGENCY ALERTS (SMS + EMAIL)
       await this.sendEmergencyAlerts(sosRecord, user);
+
+      // ✅ REAL-TIME NOTIFICATION TO ADMINS
+      await sendNotification(
+        'admin',
+        '🚨 EMERGENCY: SOS Triggered',
+        `${user.name} has triggered an SOS alert in ${sosRecord.liveLocation.coordinates[1].toFixed(4)}, ${sosRecord.liveLocation.coordinates[0].toFixed(4)}.`,
+        'sos',
+        req.app
+      );
 
       res.status(201).json({
         success: true,

@@ -3,9 +3,18 @@ import 'package:provider/provider.dart';
 import 'core/app_provider.dart';
 import 'core/providers/city_monitor_provider.dart';
 import 'screens/splash_screen.dart'; 
+import 'core/local_notification_service.dart';
+import 'core/socket_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Local Notifications
+  await LocalNotificationService.init();
+  
+  // Try to init socket if logged in
+  SocketService.init();
+
   runApp(
     MultiProvider(
       providers: [

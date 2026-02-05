@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart'; 
+import 'socket_service.dart';
 
 class AppProvider extends ChangeNotifier {
   bool _isLoading = false;
@@ -69,6 +70,9 @@ class AppProvider extends ChangeNotifier {
       _userProfileImage ??= prefs.getString('profilePicture');
       
       debugPrint("🔍 AppProvider Loaded: Name=$_userName, Email=$_userEmail, Pic=$_userProfileImage");
+      
+      // ✅ CONNECT SOCKET
+      SocketService.init();
     } else {
       // ✅ Explicitly clear state if not logged in
       _userName = null;
@@ -77,6 +81,9 @@ class AppProvider extends ChangeNotifier {
       _userDepartment = null;
       _token = null;
       debugPrint("⚠️ AppProvider: User NOT logged in, state cleared.");
+      
+      // ✅ DISCONNECT SOCKET
+      SocketService.disconnect();
     }
     notifyListeners();
   }
@@ -143,7 +150,12 @@ class AppProvider extends ChangeNotifier {
     _userProfileImage = null;
     _userDepartment = null;
     
+    // ✅ DISCONNECT SOCKET
+    SocketService.disconnect();
+    
     debugPrint("🚪 AppProvider: Logout complete, state cleared.");
     notifyListeners();
   }
+}
+
 }

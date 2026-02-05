@@ -1,0 +1,292 @@
+[
+    {
+        "title": "Transformation of Govt Inter College Classrooms",
+        "category": "Education",
+        "location": {
+            "city": "Haldwani",
+            "address": "Nainital Road, Haldwani",
+            "lat": 29.2250,
+            "lng": 79.5250
+        },
+        "financials": {
+            "allocated": 2500000,
+            "spent": 2500000,
+            "contractor": "EduTech Infra"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Smart classroom conversion with digital boards and furniture.",
+        "dates": {
+            "start": "2024-01-01",
+            "end": "2024-06-30"
+        },
+        "images": [
+            "smart_class.jpg"
+        ]
+    },
+    {
+        "title": "Solar High-Mast Light Installation",
+        "category": "Infrastructure",
+        "location": {
+            "city": "Haldwani",
+            "address": "Tikonia Chauraha",
+            "lat": 29.2100,
+            "lng": 79.5200
+        },
+        "financials": {
+            "allocated": 1200000,
+            "spent": 1200000,
+            "contractor": "Green Energy Sol"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Installation of 12ft solar high-mast lights for public safety.",
+        "dates": {
+            "start": "2024-03-15",
+            "end": "2024-05-15"
+        },
+        "images": [
+            "solar_lights.jpg"
+        ]
+    },
+    {
+        "title": "CC Road Construction - Unchapul",
+        "category": "Infrastructure",
+        "location": {
+            "city": "Haldwani",
+            "address": "Unchapul, Haldwani",
+            "lat": 29.2300,
+            "lng": 79.5000
+        },
+        "financials": {
+            "allocated": 4500000,
+            "spent": 2000000,
+            "contractor": "UK Rural Works"
+        },
+        "status": "In-Progress",
+        "progress": 45,
+        "description": "Laying of 1.5km concrete road connecting inner colonies.",
+        "dates": {
+            "start": "2025-01-10",
+            "end": "2025-08-10"
+        },
+        "images": [
+            "concrete_road.jpg"
+        ]
+    },
+    {
+        "title": "Public Toilet Complex Construction",
+        "category": "Sanitation",
+        "location": {
+            "city": "Haldwani",
+            "address": "Bus Station, Haldwani",
+            "lat": 29.2150,
+            "lng": 79.5150
+        },
+        "financials": {
+            "allocated": 1800000,
+            "spent": 900000,
+            "contractor": "Swachh Bharat Contracts"
+        },
+        "status": "In-Progress",
+        "progress": 50,
+        "description": "Construction of 10-unit public toilet complex with water supply.",
+        "dates": {
+            "start": "2025-02-01",
+            "end": "2025-07-01"
+        },
+        "images": []
+    },
+    {
+        "title": "Procurement of X-Ray Machine",
+        "category": "Health",
+        "location": {
+            "city": "Haldwani",
+            "address": "Base Hospital",
+            "lat": 29.2100,
+            "lng": 79.5180
+        },
+        "financials": {
+            "allocated": 3500000,
+            "spent": 3500000,
+            "contractor": "MediEquip Ltd"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Digital X-Ray machine for casualty ward.",
+        "dates": {
+            "start": "2024-11-01",
+            "end": "2024-12-15"
+        },
+        "images": [
+            "hospital_equip.jpg"
+        ]
+    },
+    {
+        "title": "Drinking Water Handpump Installation",
+        "category": "Sanitation",
+        "location": {
+            "city": "Haldwani",
+            "address": "Banbhoolpura Lane 5",
+            "lat": 29.2080,
+            "lng": 79.5180
+        },
+        "financials": {
+            "allocated": 150000,
+            "spent": 150000,
+            "contractor": "Jal Sansthan"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Deep bore handpump for community water supply.",
+        "dates": {
+            "start": "2024-05-01",
+            "end": "2024-05-20"
+        },
+        "images": []
+    },
+    {
+        "title": "Community Hall Repair Works",
+        "category": "Infrastructure",
+        "location": {
+            "city": "Haldwani",
+            "address": "Kathgodam",
+            "lat": 29.2700,
+            "lng": 79.5400
+        },
+        "financials": {
+            "allocated": 800000,
+            "spent": 800000,
+            "contractor": "Local Civil Works"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Roof waterproofing and painting of community hall.",
+        "dates": {
+            "start": "2024-09-01",
+            "end": "2024-10-15"
+        },
+        "images": []
+    },
+    {
+        "title": "Interlocking Tiles Pavement",
+        "category": "Infrastructure",
+        "location": {
+            "city": "Haldwani",
+            "address": "Mukhani Chauraha",
+            "lat": 29.2200,
+            "lng": 79.5000
+        },
+        "financials": {
+            "allocated": 2200000,
+            "spent": 1100000,
+            "contractor": "Urban Roads Div"
+        },
+        "status": "In-Progress",
+        "progress": 50,
+        "description": "Laying of interlocking tiles on walkway.",
+        "dates": {
+            "start": "2025-01-20",
+            "end": "2025-04-20"
+        },
+        "images": [
+            "road_work.jpg"
+        ]
+    },
+    {
+        "title": "Ambulance for Mobile Health Unit",
+        "category": "Health",
+        "location": {
+            "city": "Haldwani",
+            "address": "Sushila Tiwari Hospital",
+            "lat": 29.2300,
+            "lng": 79.5050
+        },
+        "financials": {
+            "allocated": 1500000,
+            "spent": 1500000,
+            "contractor": "Tata Motors / Dealer"
+        },
+        "status": "Completed",
+        "progress": 100,
+        "description": "Basic Life Support (BLS) Ambulance deployment.",
+        "dates": {
+            "start": "2024-08-01",
+            "end": "2024-08-30"
+        },
+        "images": [
+            "ambulance.jpg"
+        ]
+    },
+    {
+        "title": "Library Books & Furniture",
+        "category": "Education",
+        "location": {
+            "city": "Haldwani",
+            "address": "City Library, Nainital Road",
+            "lat": 29.2220,
+            "lng": 79.5220
+        },
+        "financials": {
+            "allocated": 500000,
+            "spent": 200000,
+            "contractor": "Book & Wood Supplies"
+        },
+        "status": "In-Progress",
+        "progress": 40,
+        "description": "Procurement of competitive exam books and reading tables.",
+        "dates": {
+            "start": "2025-02-10",
+            "end": "2025-03-31"
+        },
+        "images": []
+    },
+    {
+        "title": "Drainage Cover Installation",
+        "category": "Sanitation",
+        "location": {
+            "city": "Haldwani",
+            "address": "Kaladhungi Road",
+            "lat": 29.2190,
+            "lng": 79.5100
+        },
+        "financials": {
+            "allocated": 3000000,
+            "spent": 0,
+            "contractor": "Pending Tender"
+        },
+        "status": "Planned",
+        "progress": 0,
+        "description": "Covering of open drains for safety.",
+        "dates": {
+            "start": "2025-04-01",
+            "end": "2025-10-01"
+        },
+        "images": []
+    },
+    {
+        "title": "CCTV Surveillance System",
+        "category": "Infrastructure",
+        "location": {
+            "city": "Haldwani",
+            "address": "Main Market",
+            "lat": 29.2160,
+            "lng": 79.5170
+        },
+        "financials": {
+            "allocated": 5000000,
+            "spent": 1000000,
+            "contractor": "SecureCity Tech"
+        },
+        "status": "In-Progress",
+        "progress": 20,
+        "description": "Network of 50 IP cameras for traffic and safety monitoring.",
+        "dates": {
+            "start": "2025-02-15",
+            "end": "2025-08-15"
+        },
+        "images": [
+            "cctv_pole.jpg"
+        ]
+    }
+]

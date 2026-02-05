@@ -6,6 +6,7 @@ const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const { sendComplaintUpdate, sendStatusUpdate } = require('../utils/emailService');
+const { sendNotification } = require('../utils/notificationService');
 
 // ✅ CHECK IF GROQ API KEY EXISTS
 const hasAI = process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim() !== '';
@@ -238,6 +239,15 @@ exports.submitComplaint = async (req, res) => {
     });
 
     await complaint.save();
+
+    // ✅ SEND NOTIFICATION TO ADMINS (Real-Time)
+    await sendNotification(
+      'admin',
+      'New Complaint Submited',
+      `A new complaint "${title}" has been submitted in ${finalCategory}.`,
+      'complaint',
+      req.app
+    );
 
     // Run AI categorization in background
     setTimeout(() => categorizeComplaint(complaint._id), 100);
@@ -588,6 +598,15 @@ exports.updateStatusAndMessage = async (req, res) => {
 
     // ✅ SEND NOTIFICATION TO USER (Added)
     await sendStatusUpdateToUser(complaint);
+
+    // ✅ Real-Time Notification
+    await sendNotification(
+      complaint.userId,
+      'Complaint Status Updated',
+      `Your complaint "${complaint.title}" is now ${status}.`,
+      'complaint',
+      req.app
+    );
 
     return res.json({
       success: true,

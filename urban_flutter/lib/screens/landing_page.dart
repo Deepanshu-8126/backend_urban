@@ -31,35 +31,39 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFFFFFFF),
-              Color(0xFFF0F4FF),
-              Color(0xFFE3EEFF),
-              Color(0xFF6C63FF),
-            ],
-            stops: [0.0, 0.3, 0.6, 1.0],
+    // Force Light Theme for Landing Page regardless of App Settings
+    return Theme(
+      data: ThemeData.light(), 
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFFFFFFF),
+                Color(0xFFF0F4FF),
+                Color(0xFFE3EEFF),
+                Color(0xFF6C63FF),
+              ],
+              stops: [0.0, 0.3, 0.6, 1.0],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                children: [
-                  _buildHeader(),
-                  _buildHeroSection(context),
-                  _buildFeaturesSection(),
-                  _buildHowItWorks(),
-                  _buildAllFeatures(),
-                  _buildCTASection(context),
-                  _buildFooter(),
-                ],
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    _buildHeroSection(context),
+                    _buildFeaturesSection(),
+                    _buildHowItWorks(),
+                    _buildAllFeatures(),
+                    _buildCTASection(context),
+                    _buildFooter(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -157,47 +161,20 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           const SizedBox(height: 24),
           
           SizedBox(
-            height: 80,
-            child: DefaultTextStyle(
-              style: GoogleFonts.poppins(
-                fontSize: 42,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E1E1E),
-                height: 1.2,
-                shadows: [
-                  Shadow(
-                    blurRadius: 10.0,
-                    color: Colors.black.withOpacity(0.1),
-                    offset: const Offset(2.0, 2.0),
-                  ),
-                ],
-              ),
-              child: AnimatedTextKit(
-                repeatForever: true,
-                isRepeatingAnimation: true,
-                displayFullTextOnTap: true,
-                animatedTexts: [
-                  TypewriterAnimatedText(
-                    'Chota Kadam,', 
-                    speed: const Duration(milliseconds: 100),
-                    cursor: '|',
-                  ),
-                  TypewriterAnimatedText(
-                    'Badalta Bharat 🇮🇳', 
-                    speed: const Duration(milliseconds: 100),
-                    cursor: '|',
-                    textStyle: GoogleFonts.poppins(color: const Color(0xFF6C63FF)) // Highlight color
-                  ),
-                  TypewriterAnimatedText(
-                    'Smart City,', 
-                    speed: const Duration(milliseconds: 100),
-                    cursor: '|',
-                  ),
-                  TypewriterAnimatedText(
-                    'Smart Future 🚀', 
-                    speed: const Duration(milliseconds: 100),
-                    cursor: '|',
-                    textStyle: GoogleFonts.poppins(color: const Color(0xFF6C63FF))
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: GoogleFonts.poppins(
+                  fontSize: 36, // Slightly reduced for static layout
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E1E1E),
+                  height: 1.2,
+                ),
+                children: [
+                  const TextSpan(text: "Chota Kadam, \n"),
+                  TextSpan(
+                    text: "Badalta Bharat 🇮🇳",
+                    style: GoogleFonts.poppins(color: const Color(0xFF6C63FF)),
                   ),
                 ],
               ),

@@ -20,14 +20,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
   void initState() {
     super.initState();
     _fetchNotifications();
-    // ✅ Real-time Polling every 10 seconds
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    
+    // ✅ Socket Listener for Real-Time UI Refresh
+    SocketService.setNotificationListener((data) {
+      if (mounted) _fetchNotifications(silent: true);
+    });
+
+    // ✅ Legacy Polling (as fallback) 
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) _fetchNotifications(silent: true);
     });
   }
 
   @override
   void dispose() {
+    SocketService.removeNotificationListener();
     _timer?.cancel();
     super.dispose();
   }
