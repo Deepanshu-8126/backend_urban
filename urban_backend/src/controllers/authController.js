@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const crypto = require('crypto');
 const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -71,18 +72,29 @@ const validateEmergencyContacts = (contacts) => {
   }
 };
 
-// Generate 4-digit OTP (10 minutes validity)
-const generateOtp = (email) => {
-  console.log('🔑 Generating OTP for:', email);
+// Generate Secure OTP (Crypto based)
+const generateOtp = (email) => new Promise((resolve, reject) => {
+  console.log('🔑 Generating Secure OTP for:', email);
   otpStore.delete(email);
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
-  otpStore.set(email, {
-    otp,
-    expiresAt: Date.now() + 600000 // 10 minutes
+
+  crypto.randomBytes(3, (err, buffer) => {
+    if (err) {
+      console.error("Crypto OTP Error:", err);
+      reject(err);
+      return;
+    }
+    const otp = parseInt(buffer.toString("hex"), 16)
+      .toString()
+      .substr(0, 6);
+
+    otpStore.set(email, {
+      otp,
+      expiresAt: Date.now() + 600000 // 10 minutes
+    });
+    console.log('✅ Secure OTP generated:', otp);
+    resolve(otp);
   });
-  console.log('✅ OTP generated:', otp);
-  return otp;
-};
+});
 
 const verifyOtp = (email, otp) => {
   console.log('🔍 Verifying OTP for:', email, 'OTP:', otp);
@@ -536,7 +548,7 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Email not found' });
     }
 
-    const otp = generateOtp(email);
+    const otp = await generateOtp(email);
     const emailSent = await sendOtpEmail(email, otp);
 
     if (!emailSent) {
