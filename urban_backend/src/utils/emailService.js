@@ -12,17 +12,20 @@ if (!emailUser || !emailPass) {
 
 // Create transporter with fast settings
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // Use SSL
   auth: {
     user: emailUser,
     pass: emailPass ? emailPass.trim() : ''
   },
-  // Fast delivery settings
+  // Higher timeouts for stable connection on cloud platforms
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
   pool: true,
-  maxConnections: 10,
-  maxMessages: 200,
-  rateDelta: 2 * 60 * 1000, // Rate limit
-  rateLimit: 10 // 10 messages per 2 minutes
+  maxConnections: 5,
+  maxMessages: 100
 });
 
 // Cache for faster reuse
