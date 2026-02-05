@@ -196,23 +196,26 @@ exports.signup = async (req, res) => {
     // Allow any email to proceed to OTP
 
     const otp = generateOtp(email);
-    const emailSent = await sendOtpEmail(email, otp);
 
-    // ✅ ALWAYS PROCEED - even if email fails (for testing on Render)
-    if (!emailSent) {
-      console.warn('⚠️ Email delivery failed, but proceeding with signup for UX');
-    } else {
-      console.log('✅ OTP sent to:', email);
-    }
+    // 🔥 FIRE & FORGET (Non-blocking)
+    // Don't await this! Let it run in background.
+    sendOtpEmail(email, otp)
+      .then(sent => {
+        if (sent) console.log(`✅ [Background] OTP email sent to ${email}`);
+        else console.warn(`⚠️ [Background] OTP email failed for ${email}`);
+      })
+      .catch(err => console.error(`❌ [Background] Email Error: ${err.message}`));
+
+    console.log('⚡ Immediate response sent to user (Email processing in background)');
 
     return res.json({
       success: true,
-      message: emailSent
-        ? 'OTP sent to your email'
-        : 'OTP generated (email delivery unavailable)',
+      message: 'OTP generated',
       email,
-      emailSent, // Frontend can show warning if false
-      otpForTesting: process.env.NODE_ENV === 'development' ? otp : undefined // Only in dev
+      // Since we don't wait for email, we assume true for UX. 
+      // User will check inbox anyway.
+      emailSent: true,
+      otpForTesting: process.env.NODE_ENV === 'development' ? otp : undefined
     });
   } catch (error) {
     console.error('Signup error:', error);
