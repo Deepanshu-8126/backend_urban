@@ -1,16 +1,26 @@
+const sgMail = require('@sendgrid/mail');
 const nodemailer = require('nodemailer');
 
 // Check if environment variables exist
 const emailUser = process.env.EMAIL_USER;
 const emailPass = process.env.EMAIL_PASS;
+const sendGridKey = process.env.SENDGRID_API_KEY;
+
+// Initialize SendGrid if API key is available
+if (sendGridKey) {
+  sgMail.setApiKey(sendGridKey);
+  console.log('✅ SendGrid initialized for production email delivery');
+} else {
+  console.warn('⚠️ SENDGRID_API_KEY not found - will use Gmail SMTP fallback');
+}
 
 if (!emailUser || !emailPass) {
   console.error('❌ EMAIL_USER or EMAIL_PASS not found in .env file!');
   console.error('Please add EMAIL_USER and EMAIL_PASS to your .env file');
 }
 
-// Create transporter specifically for Gmail App Password (Optimized for Render)
-console.log('📬 Email Service: Initializing Hardened Gmail SMTP...');
+// Create transporter for Gmail SMTP fallback (local development)
+console.log('📬 Email Service: Initializing Gmail SMTP fallback...');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -19,7 +29,6 @@ const transporter = nodemailer.createTransport({
     pass: emailPass ? emailPass.trim() : ''
   },
   tls: {
-    // Relaxed TLS for cloud proxy compatibility
     rejectUnauthorized: false
   },
   debug: true,
@@ -29,18 +38,20 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 90000
 });
 
-// Verify connection configuration
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Gmail SMTP Verification Failed:', error.message);
-    if (process.env.RENDER) {
-      console.warn('💡 RENDER ALERT: Render Free Tier often blocks standard SMTP Ports.');
-      console.warn('👉 Ensure you are using a 16-digit Google App Password.');
+// Verify connection configuration (non-blocking)
+if (!sendGridKey) {
+  transporter.verify((error) => {
+    if (error) {
+      console.error('❌ Gmail SMTP Verification Failed:', error.message);
+      if (process.env.RENDER) {
+        console.warn('💡 RENDER ALERT: Render Free Tier blocks SMTP ports.');
+        console.warn('👉 Add SENDGRID_API_KEY to environment variables for email delivery.');
+      }
+    } else {
+      console.log('✅ Gmail SMTP is ready and verified');
     }
-  } else {
-    console.log('✅ Gmail SMTP is ready and verified');
-  }
-});
+  });
+}
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -113,7 +124,13 @@ class EmailService {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             text-align: center;
-            padding: 30px 20px;
+            padding: 20px;
+          }
+          .logo {
+            max-width: 120px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
           }
           .otp-box {
             background: #f8f9fa;
@@ -163,8 +180,9 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🔐 OTP Verification</h1>
-            <p>Urban Complaint System</p>
+            <img src="https://urbanos-backend.onrender.com/uploads/logo.png" alt="Smart City Logo" class="logo" onerror="this.style.display='none'">
+            <h2 style="margin:0; font-size: 24px;">Smart City Verification</h2>
+            <p style="margin: 5px 0 0; opacity: 0.9;">Secure Login Service</p>
           </div>
           <div class="otp-box">
             <div class="otp-code">{{OTP}}</div>
@@ -420,8 +438,9 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
+            <img src="https://urbanos-backend.onrender.com/uploads/logo.png" alt="Smart City Logo" class="logo" onerror="this.style.display='none'">
             <div class="ai-icon">🤖</div>
-            <h1>AI Analysis Complete</h1>
+            <h1 style="margin:10px 0;">AI Analysis Complete</h1>
             <p>Smart Complaint Classification</p>
           </div>
           <div class="content">
@@ -504,7 +523,8 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Welcome to Urban Complaint System!</h1>
+            <img src="https://urbanos-backend.onrender.com/uploads/logo.png" alt="Smart City Logo" class="logo" onerror="this.style.display='none'">
+            <h1 style="margin:10px 0;">🎉 Welcome to Smart City!</h1>
             <p>Your voice matters in making our city better</p>
           </div>
           <div class="content">
@@ -588,7 +608,8 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>📊 Status Update</h1>
+            <img src="https://urbanos-backend.onrender.com/uploads/logo.png" alt="Smart City Logo" class="logo" onerror="this.style.display='none'">
+            <h1 style="margin:10px 0;">📊 Status Update</h1>
             <p>Track Your Complaint Journey</p>
           </div>
           <div class="content">
@@ -623,8 +644,29 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
+      // 1. Try SendGrid first (Production - works on Render)
+      if (sendGridKey) {
+        console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
+        const msg = {
+          to: mailOptions.to,
+          from: mailOptions.from || process.env.EMAIL_USER || 'noreply@urbanos.com',
+          subject: mailOptions.subject,
+          html: mailOptions.html
+        };
+
+        try {
+          await sgMail.send(msg);
+          console.log('✅ SendGrid delivery successful!');
+          return true;
+        } catch (sgError) {
+          console.error('❌ SendGrid Error:', sgError.message);
+          console.warn('⚠️ Falling back to Gmail SMTP...');
+        }
+      }
+
+      // 2. Fallback to Gmail SMTP (Local development)
       if (!transporter) {
-        console.error('❌ Gmail SMTP Transporter not initialized');
+        console.error('❌ No email mechanism available (SendGrid or Gmail SMTP)');
         return false;
       }
 

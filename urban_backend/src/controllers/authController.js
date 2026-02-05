@@ -198,16 +198,21 @@ exports.signup = async (req, res) => {
     const otp = generateOtp(email);
     const emailSent = await sendOtpEmail(email, otp);
 
+    // ✅ ALWAYS PROCEED - even if email fails (for testing on Render)
     if (!emailSent) {
-      console.log('❌ Failed to send OTP email:', email);
-      return res.status(500).json({ success: false, error: 'Failed to send OTP email' });
+      console.warn('⚠️ Email delivery failed, but proceeding with signup for UX');
+    } else {
+      console.log('✅ OTP sent to:', email);
     }
 
-    console.log('✅ OTP sent to:', email);
     return res.json({
       success: true,
-      message: 'OTP sent to your email',
-      email
+      message: emailSent
+        ? 'OTP sent to your email'
+        : 'OTP generated (email delivery unavailable)',
+      email,
+      emailSent, // Frontend can show warning if false
+      otpForTesting: process.env.NODE_ENV === 'development' ? otp : undefined // Only in dev
     });
   } catch (error) {
     console.error('Signup error:', error);
