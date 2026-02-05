@@ -12,7 +12,6 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 console.log('✅ Body parser configured');
 
 // ✅ CORS CONFIGURATION
-// ✅ CORS CONFIGURATION
 app.use(cors({
   origin: '*',
   credentials: true,
@@ -39,9 +38,19 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 console.log('✅ Multer configured');
 
-// ✅ CONNECT TO DATABASE
-connectDB();
-console.log('✅ Database connection initiated');
+// ✅ CONNECT TO DATABASE & START SERVER
+const startApp = async () => {
+  try {
+    console.log('🔄 Connecting to database...');
+    await connectDB();
+    console.log('✅ Database connection established');
+
+    startServer();
+  } catch (error) {
+    console.error('❌ Failed to start application:', error.message);
+    process.exit(1);
+  }
+};
 
 // ✅ HEALTH CHECK ROUTES
 app.get('/', async (req, res) => {
@@ -259,4 +268,4 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // ✅ START THE SERVER
-startServer();
+startApp();

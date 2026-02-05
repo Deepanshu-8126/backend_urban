@@ -277,12 +277,11 @@ exports.verifyOtp = async (req, res) => {
         else if (resolvedEmail.includes('health')) department = 'health';
         else if (req.body.department) department = req.body.department; // Allow manual department selection
 
-        const hashedPassword = await bcrypt.hash(password, 10);
         admin = new Admin({
           name,
           email: resolvedEmail,
-          password: hashedPassword,
-          role: 'admin', // Keep generic 'admin' role, or specific like 'water-admin' if needed. keeping simple for now.
+          password: password,
+          role: 'admin',
           department
         });
         await admin.save();
