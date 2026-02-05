@@ -27,10 +27,8 @@ app.use(rateLimit({
 }));
 
 if (process.env.RENDER) {
-  console.log('🌐 Environment: Render Cloud');
-  if (!process.env.SENDGRID_API_KEY) {
-    console.warn('⚠️ WARNING: SENDGRID_API_KEY is missing. Gmail SMTP might fail on Render Free Tier.');
-  }
+  console.log('🌐 Environment: Render Cloud Deployment');
+  console.log('📬 Secondary Verification: Using Personal Email API (Gmail SMTP)');
 }
 
 // ✅ BODY PARSER CONFIGURATION

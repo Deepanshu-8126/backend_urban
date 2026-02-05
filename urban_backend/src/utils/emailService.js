@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-const sgMail = require('@sendgrid/mail');
 
 // Check if environment variables exist
 const emailUser = process.env.EMAIL_USER;
@@ -8,47 +7,40 @@ const emailPass = process.env.EMAIL_PASS;
 if (!emailUser || !emailPass) {
   console.error('❌ EMAIL_USER or EMAIL_PASS not found in .env file!');
   console.error('Please add EMAIL_USER and EMAIL_PASS to your .env file');
-  // Removed process.exit(1) to prevent server crash
 }
 
 // Create transporter specifically for Gmail App Password (Optimized for Render)
-console.log('📬 Email Service: Initializing Reliability Layer...');
+console.log('📬 Email Service: Initializing Hardened Gmail SMTP...');
 
-let transporter;
-const useSendGrid = !!process.env.SENDGRID_API_KEY;
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: emailUser ? emailUser.trim() : '',
+    pass: emailPass ? emailPass.trim() : ''
+  },
+  tls: {
+    // Relaxed TLS for cloud proxy compatibility
+    rejectUnauthorized: false
+  },
+  debug: true,
+  logger: true,
+  connectionTimeout: 60000,
+  greetingTimeout: 60000,
+  socketTimeout: 90000
+});
 
-if (useSendGrid) {
-  console.log('📬 Mode: SENDGRID (Bypasses Render SMTP Block)');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-} else {
-  console.log('📬 Mode: SMTP (Gmail App Password)');
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: emailUser ? emailUser.trim() : '',
-      pass: emailPass ? emailPass.trim() : ''
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    debug: true,
-    logger: true,
-    connectionTimeout: 60000,
-    greetingTimeout: 60000,
-    socketTimeout: 90000
-  });
-
-  transporter.verify((error) => {
-    if (error) {
-      console.error('❌ SMTP Verification Failed:', error.message);
-      if (process.env.RENDER) {
-        console.warn('⚠️ RENDER ALERT: SMTP is likely blocked. PLEASE USE SENDGRID API KEY.');
-      }
-    } else {
-      console.log('✅ SMTP Ready');
+// Verify connection configuration
+transporter.verify((error) => {
+  if (error) {
+    console.error('❌ Gmail SMTP Verification Failed:', error.message);
+    if (process.env.RENDER) {
+      console.warn('💡 RENDER ALERT: Render Free Tier often blocks standard SMTP Ports.');
+      console.warn('👉 Ensure you are using a 16-digit Google App Password.');
     }
-  });
-}
+  } else {
+    console.log('✅ Gmail SMTP is ready and verified');
+  }
+});
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -631,33 +623,20 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
-      // 1. Try SendGrid first (Reliable on Cloud)
-      if (process.env.SENDGRID_API_KEY) {
-        const msg = {
-          to: mailOptions.to,
-          from: process.env.EMAIL_USER || 'noreply@urbanos.com',
-          subject: mailOptions.subject,
-          html: mailOptions.html
-        };
-        await sgMail.send(msg);
-        console.log('✅ Email sent successfully via SendGrid to:', mailOptions.to);
-        return true;
-      }
-
-      // 2. Fallback to SMTP (Local only)
       if (!transporter) {
-        console.error('❌ No email mechanism available (SendGrid or SMTP)');
+        console.error('❌ Gmail SMTP Transporter not initialized');
         return false;
       }
 
-      console.log(`📧 Attempting to send email to ${mailOptions.to} using SMTP...`);
+      console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
       await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully via SMTP!');
+      console.log('✅ Gmail SMTP Success!');
       return true;
     } catch (error) {
-      console.error('📧 Email delivery failed:', error.message);
+      console.error('📧 Gmail SMTP Error:', error.message);
       if (error.code === 'ETIMEDOUT' && process.env.RENDER) {
-        console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall. Please use SendGrid API.');
+        console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall.');
+        console.error('💡 Ensure you use a 16-digit App Password for hyperdk91@gmail.com.');
       }
       return false;
     }
