@@ -642,279 +642,277 @@ class EmailService {
     `;
   }
 
-  // Helper to standardize email options with Anti-Spam headers
-  _getStandardOptions(to, subject, html, textOverride) {
     return {
-      to,
-      from: {
-        email: 'deepanshukapri4@gmail.com', // Verified Sender
-        name: 'Urban OS Team'
-      },
-      subject,
-      text: textOverride || 'Please view this email in an HTML compatible client.',
-      html,
-      headers: {
-        'X-Entity-Ref-ID': `urban-os-${Date.now()}`
-      }
-    };
+  to,
+  from: {
+    email: 'deepanshukapri4@gmail.com', // Verified Sender in SendGrid
+    name: 'Urban OS' // Shorter, cleaner name
+  },
+  subject,
+  text: textOverride || 'Please view this email in an HTML compatible client.',
+  html,
+  // Removed custom X-Entity-Ref-ID to look more like a standard personal email
+  // Added Reply-To to encourage engagement validation
+  replyTo: 'deepanshukapri4@gmail.com'
+};
   }
 
   async sendEmail(mailOptions) {
-    try {
-      // 1. Try SendGrid first (Production - works on Render)
-      if (sendGridKey) {
-        console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
-        const msg = {
-          to: mailOptions.to,
-          from: {
-            email: 'deepanshukapri4@gmail.com',
-            name: 'Urban OS Team'
-          },
-          subject: mailOptions.subject,
-          text: mailOptions.text,
-          html: mailOptions.html,
-          headers: {
-            'X-Entity-Ref-ID': `urban-os-${Date.now()}`
-          }
-        };
-
-        try {
-          await sgMail.send(msg);
-          console.log('✅ SendGrid delivery successful!');
-          return true;
-        } catch (sgError) {
-          console.error('❌ SendGrid Error:', sgError.message);
-          console.warn('⚠️ Falling back to Gmail SMTP...');
+  try {
+    // 1. Try SendGrid first (Production - works on Render)
+    if (sendGridKey) {
+      console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
+      const msg = {
+        to: mailOptions.to,
+        from: {
+          email: 'deepanshukapri4@gmail.com',
+          name: 'Urban OS Team'
+        },
+        subject: mailOptions.subject,
+        text: mailOptions.text,
+        html: mailOptions.html,
+        headers: {
+          'X-Entity-Ref-ID': `urban-os-${Date.now()}`
         }
-      }
+      };
 
-      // 2. Fallback to Gmail SMTP (Local development)
-      if (!transporter) {
-        console.error('❌ No email mechanism available (SendGrid or Gmail SMTP)');
-        return false;
+      try {
+        await sgMail.send(msg);
+        console.log('✅ SendGrid delivery successful!');
+        return true;
+      } catch (sgError) {
+        console.error('❌ SendGrid Error:', sgError.message);
+        console.warn('⚠️ Falling back to Gmail SMTP...');
       }
+    }
 
-      console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Gmail SMTP Success!');
-      return true;
-    } catch (error) {
-      console.error('📧 Gmail SMTP Error:', error.message);
-      if (error.code === 'ETIMEDOUT' && process.env.RENDER) {
-        console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall.');
-        console.error('💡 Ensure you use a 16-digit App Password for hyperdk91@gmail.com.');
-      }
+    // 2. Fallback to Gmail SMTP (Local development)
+    if (!transporter) {
+      console.error('❌ No email mechanism available (SendGrid or Gmail SMTP)');
       return false;
     }
+
+    console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
+    await transporter.sendMail(mailOptions);
+    console.log('✅ Gmail SMTP Success!');
+    return true;
+  } catch (error) {
+    console.error('📧 Gmail SMTP Error:', error.message);
+    if (error.code === 'ETIMEDOUT' && process.env.RENDER) {
+      console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall.');
+      console.error('💡 Ensure you use a 16-digit App Password for hyperdk91@gmail.com.');
+    }
+    return false;
   }
+}
 
   async sendOtpEmail(email, otp) {
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      console.log('📧 Invalid email:', email);
-      return false;
-    }
-
-    try {
-      const htmlContent = this.templates.otp
-        .replace('{{OTP}}', otp)
-        .replace('{{EMAIL}}', email);
-
-      const mailOptions = {
-        to: email,
-        from: `"Urban OS Team" <${emailUser}>`,
-        subject: `Verification Code: ${otp}`, // CLEAN SUBJECT (No Emojis triggers)
-        text: `Your Urban OS verification code is: ${otp}. Do not share this code.`,
-        html: htmlContent
-      };
-
-      return await this.sendEmail(mailOptions);
-    } catch (error) {
-      console.error('📧 OTP send error:', error.message);
-      return false;
-    }
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    console.log('📧 Invalid email:', email);
+    return false;
   }
+
+  try {
+    const htmlContent = this.templates.otp
+      .replace('{{OTP}}', otp)
+      .replace('{{EMAIL}}', email);
+
+    const mailOptions = {
+      to: email,
+      from: `"Urban OS Team" <${emailUser}>`,
+      subject: `Verification Code: ${otp}`, // CLEAN SUBJECT (No Emojis triggers)
+      text: `Your Urban OS verification code is: ${otp}. Do not share this code.`,
+      html: htmlContent
+    };
+
+    return await this.sendEmail(mailOptions);
+  } catch (error) {
+    console.error('📧 OTP send error:', error.message);
+    return false;
+  }
+}
 
   async sendComplaintUpdate(email, userData, complaintData) {
-    try {
-      const htmlContent = this.templates.complaintUpdate
-        .replace('{{USERNAME}}', userData.name || 'User')
-        .replace('{{TITLE}}', complaintData.title)
-        .replace('{{STATUS}}', complaintData.status.toLowerCase())
-        .replace('{{CATEGORY}}', complaintData.category)
-        .replace('{{ADMIN_MESSAGE}}', complaintData.adminMessage || 'No updates yet')
-        .replace('{{TIMESTAMP}}', new Date().toLocaleString());
+  try {
+    const htmlContent = this.templates.complaintUpdate
+      .replace('{{USERNAME}}', userData.name || 'User')
+      .replace('{{TITLE}}', complaintData.title)
+      .replace('{{STATUS}}', complaintData.status.toLowerCase())
+      .replace('{{CATEGORY}}', complaintData.category)
+      .replace('{{ADMIN_MESSAGE}}', complaintData.adminMessage || 'No updates yet')
+      .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      return await this.sendEmail(this._getStandardOptions(
-        email,
-        `Complaint Update: ${complaintData.title}`,
-        htmlContent,
-        `Update for your complaint: ${complaintData.title}. Status: ${complaintData.status}. Admin Message: ${complaintData.adminMessage || 'None'}.`
-      ));
-    } catch (error) {
-      console.error('📧 Complaint update error:', error.message);
-      return false;
-    }
+    return await this.sendEmail(this._getStandardOptions(
+      email,
+      `Complaint Update: ${complaintData.title}`,
+      htmlContent,
+      `Update for your complaint: ${complaintData.title}. Status: ${complaintData.status}. Admin Message: ${complaintData.adminMessage || 'None'}.`
+    ));
+  } catch (error) {
+    console.error('📧 Complaint update error:', error.message);
+    return false;
   }
+}
 
   async sendAdminNotification(adminEmail, complaintData) {
-    try {
-      const htmlContent = this.templates.adminNotification
-        .replace('{{ADMIN_NAME}}', 'Admin')
-        .replace('{{TITLE}}', complaintData.title)
-        .replace('{{DESCRIPTION}}', complaintData.description)
-        .replace('{{CATEGORY}}', complaintData.category)
-        .replace('{{PRIORITY}}', complaintData.priorityScore)
-        .replace('{{LATITUDE}}', complaintData.location.coordinates[1])
-        .replace('{{LONGITUDE}}', complaintData.location.coordinates[0])
-        .replace('{{USERNAME}}', complaintData.userName)
-        .replace('{{CONTACT}}', complaintData.userContact || 'N/A')
-        .replace('{{TIMESTAMP}}', new Date().toLocaleString());
+  try {
+    const htmlContent = this.templates.adminNotification
+      .replace('{{ADMIN_NAME}}', 'Admin')
+      .replace('{{TITLE}}', complaintData.title)
+      .replace('{{DESCRIPTION}}', complaintData.description)
+      .replace('{{CATEGORY}}', complaintData.category)
+      .replace('{{PRIORITY}}', complaintData.priorityScore)
+      .replace('{{LATITUDE}}', complaintData.location.coordinates[1])
+      .replace('{{LONGITUDE}}', complaintData.location.coordinates[0])
+      .replace('{{USERNAME}}', complaintData.userName)
+      .replace('{{CONTACT}}', complaintData.userContact || 'N/A')
+      .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      return await this.sendEmail(this._getStandardOptions(
-        adminEmail,
-        `🚨 High Priority Complaint: ${complaintData.title}`,
-        htmlContent,
-        `New High Priority Complaint.\nTitle: ${complaintData.title}\nPriority: ${complaintData.priorityScore}`
-      ));
-    } catch (error) {
-      console.error('📧 Admin notification error:', error.message);
-      return false;
-    }
+    return await this.sendEmail(this._getStandardOptions(
+      adminEmail,
+      `🚨 High Priority Complaint: ${complaintData.title}`,
+      htmlContent,
+      `New High Priority Complaint.\nTitle: ${complaintData.title}\nPriority: ${complaintData.priorityScore}`
+    ));
+  } catch (error) {
+    console.error('📧 Admin notification error:', error.message);
+    return false;
   }
+}
 
   async sendAiAnalysis(email, userData, analysisData) {
-    try {
-      const htmlContent = this.templates.aiAnalysis
-        .replace('{{USERNAME}}', userData.name || 'User')
-        .replace('{{CATEGORY}}', analysisData.category)
-        .replace('{{ASSIGNED_DEPARTMENT}}', analysisData.assignedDept)
-        .replace('{{CONFIDENCE}}', (analysisData.aiConfidence * 100).toFixed(1))
-        .replace('{{CONFIDENCE_PERCENT}}', `${(analysisData.aiConfidence * 100)}%`)
-        .replace('{{PRIORITY}}', analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low')
-        .replace('{{RESPONSE_TIME}}', analysisData.priorityScore >= 5 ? '1-2 days' : '3-5 days');
+  try {
+    const htmlContent = this.templates.aiAnalysis
+      .replace('{{USERNAME}}', userData.name || 'User')
+      .replace('{{CATEGORY}}', analysisData.category)
+      .replace('{{ASSIGNED_DEPARTMENT}}', analysisData.assignedDept)
+      .replace('{{CONFIDENCE}}', (analysisData.aiConfidence * 100).toFixed(1))
+      .replace('{{CONFIDENCE_PERCENT}}', `${(analysisData.aiConfidence * 100)}%`)
+      .replace('{{PRIORITY}}', analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low')
+      .replace('{{RESPONSE_TIME}}', analysisData.priorityScore >= 5 ? '1-2 days' : '3-5 days');
 
-      return await this.sendEmail(this._getStandardOptions(
-        email,
-        '🤖 AI Analysis Complete - Your Complaint',
-        htmlContent,
-        `AI Analysis for your complaint.\nCategory: ${analysisData.category}\nConfidence: ${(analysisData.aiConfidence * 100).toFixed(1)}%\nPriority: ${analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low'}`
-      ));
-    } catch (error) {
-      console.error('📧 AI analysis error:', error.message);
-      return false;
-    }
+    return await this.sendEmail(this._getStandardOptions(
+      email,
+      '🤖 AI Analysis Complete - Your Complaint',
+      htmlContent,
+      `AI Analysis for your complaint.\nCategory: ${analysisData.category}\nConfidence: ${(analysisData.aiConfidence * 100).toFixed(1)}%\nPriority: ${analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low'}`
+    ));
+  } catch (error) {
+    console.error('📧 AI analysis error:', error.message);
+    return false;
   }
+}
 
   async sendWelcomeEmail(email, userData) {
-    try {
-      const htmlContent = this.templates.welcome
-        .replace('{{USERNAME}}', userData.name || 'User');
+  try {
+    const htmlContent = this.templates.welcome
+      .replace('{{USERNAME}}', userData.name || 'User');
 
-      return await this.sendEmail(this._getStandardOptions(
-        email,
-        'Welcome to Urban OS!',
-        htmlContent,
-        `Welcome to Urban OS, ${userData.name}! We are glad to have you on board.`
-      ));
-    } catch (error) {
-      console.error('📧 Welcome email error:', error.message);
-      return false;
-    }
+    return await this.sendEmail(this._getStandardOptions(
+      email,
+      'Welcome to Urban OS!',
+      htmlContent,
+      `Welcome to Urban OS, ${userData.name}! We are glad to have you on board.`
+    ));
+  } catch (error) {
+    console.error('📧 Welcome email error:', error.message);
+    return false;
   }
+}
 
   async sendStatusUpdate(email, userData, statusData) {
-    try {
-      const statusConfig = {
-        pending: { color: '#FF9800', emoji: '⏳', description: 'Your complaint is under review' },
-        working: { color: '#2196F3', emoji: '🔧', description: 'Work is in progress' },
-        solved: { color: '#4CAF50', emoji: '✅', description: 'Issue has been resolved' },
-        fake: { color: '#F44336', emoji: '❌', description: 'Marked as fake complaint' }
-      };
-
-      const config = statusConfig[statusData.status] || statusConfig.pending;
-
-      const htmlContent = this.templates.statusUpdate
-        .replace('{{GREETING}}', this.getRandomGreeting())
-        .replace('{{USERNAME}}', userData.name || 'User')
-        .replace('{{TITLE}}', statusData.title)
-        .replace('{{STATUS}}', statusData.status.toUpperCase())
-        .replace('{{STATUS_COLOR}}', config.color)
-        .replace('{{STATUS_EMOJI}}', config.emoji)
-        .replace('{{STATUS_DESCRIPTION}}', config.description)
-        .replace('{{PROGRESS_PERCENT}}', this.calculateProgress(statusData.status))
-        .replace('{{NEXT_STEPS}}', this.getNextSteps(statusData.status))
-        .replace('{{ESTIMATED_COMPLETION}}', this.getEstimatedCompletion(statusData.status))
-        .replace('{{ADMIN_COMMENT}}', statusData.adminMessage || 'No comments yet');
-
-      return await this.sendEmail(this._getStandardOptions(
-        email,
-        `Status Update: ${statusData.title}`,
-        htmlContent,
-        `Your complaint status has been updated to: ${statusData.status.toUpperCase()}.\nAdmin/Officer Message: ${statusData.adminMessage || 'No comments'}.\nProgress: ${this.calculateProgress(statusData.status)}`
-      ));
-    } catch (error) {
-      console.error('📧 Status update error:', error.message);
-      return false;
-    }
-  }
-
-  getRandomGreeting() {
-    const greetings = this.aiPersonalization.greetingVariants;
-    return greetings[Math.floor(Math.random() * greetings.length)];
-  }
-
-  calculateProgress(status) {
-    const progressMap = {
-      pending: '25%',
-      working: '60%',
-      solved: '100%',
-      fake: '0%'
+  try {
+    const statusConfig = {
+      pending: { color: '#FF9800', emoji: '⏳', description: 'Your complaint is under review' },
+      working: { color: '#2196F3', emoji: '🔧', description: 'Work is in progress' },
+      solved: { color: '#4CAF50', emoji: '✅', description: 'Issue has been resolved' },
+      fake: { color: '#F44336', emoji: '❌', description: 'Marked as fake complaint' }
     };
-    return progressMap[status] || '0%';
-  }
 
-  getNextSteps(status) {
-    const stepsMap = {
-      pending: 'Admin will review your complaint and assign it to the appropriate department.',
-      working: 'Team is actively working on resolving your issue.',
-      solved: 'Issue has been resolved. Thank you for your patience.',
-      fake: 'Complaint marked as fake. No further action required.'
-    };
-    return stepsMap[status] || 'Processing your request.';
-  }
+    const config = statusConfig[statusData.status] || statusConfig.pending;
 
-  getEstimatedCompletion(status) {
-    const timeMap = {
-      pending: 'Within 24 hours',
-      working: '1-3 business days',
-      solved: 'Completed',
-      fake: 'N/A'
-    };
-    return timeMap[status] || 'Processing';
+    const htmlContent = this.templates.statusUpdate
+      .replace('{{GREETING}}', this.getRandomGreeting())
+      .replace('{{USERNAME}}', userData.name || 'User')
+      .replace('{{TITLE}}', statusData.title)
+      .replace('{{STATUS}}', statusData.status.toUpperCase())
+      .replace('{{STATUS_COLOR}}', config.color)
+      .replace('{{STATUS_EMOJI}}', config.emoji)
+      .replace('{{STATUS_DESCRIPTION}}', config.description)
+      .replace('{{PROGRESS_PERCENT}}', this.calculateProgress(statusData.status))
+      .replace('{{NEXT_STEPS}}', this.getNextSteps(statusData.status))
+      .replace('{{ESTIMATED_COMPLETION}}', this.getEstimatedCompletion(statusData.status))
+      .replace('{{ADMIN_COMMENT}}', statusData.adminMessage || 'No comments yet');
+
+    return await this.sendEmail(this._getStandardOptions(
+      email,
+      `Status Update: ${statusData.title}`,
+      htmlContent,
+      `Your complaint status has been updated to: ${statusData.status.toUpperCase()}.\nAdmin/Officer Message: ${statusData.adminMessage || 'No comments'}.\nProgress: ${this.calculateProgress(statusData.status)}`
+    ));
+  } catch (error) {
+    console.error('📧 Status update error:', error.message);
+    return false;
   }
+}
+
+getRandomGreeting() {
+  const greetings = this.aiPersonalization.greetingVariants;
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
+
+calculateProgress(status) {
+  const progressMap = {
+    pending: '25%',
+    working: '60%',
+    solved: '100%',
+    fake: '0%'
+  };
+  return progressMap[status] || '0%';
+}
+
+getNextSteps(status) {
+  const stepsMap = {
+    pending: 'Admin will review your complaint and assign it to the appropriate department.',
+    working: 'Team is actively working on resolving your issue.',
+    solved: 'Issue has been resolved. Thank you for your patience.',
+    fake: 'Complaint marked as fake. No further action required.'
+  };
+  return stepsMap[status] || 'Processing your request.';
+}
+
+getEstimatedCompletion(status) {
+  const timeMap = {
+    pending: 'Within 24 hours',
+    working: '1-3 business days',
+    solved: 'Completed',
+    fake: 'N/A'
+  };
+  return timeMap[status] || 'Processing';
+}
 
   // Health check
   async testConnection() {
-    try {
-      await transporter.verify();
-      console.log('✅ Email service connected successfully');
-      return true;
-    } catch (error) {
-      console.error('❌ Email service connection failed:', error.message);
-      return false;
-    }
+  try {
+    await transporter.verify();
+    console.log('✅ Email service connected successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Email service connection failed:', error.message);
+    return false;
   }
+}
 
-  // Get statistics
-  getEmailStats() {
-    return {
-      cacheSize: emailCache.size,
-      templates: Object.keys(this.templates).length,
-      connected: transporter.transporter ? true : false,
-      maxConnections: 10,
-      maxMessages: 200
-    };
-  }
+// Get statistics
+getEmailStats() {
+  return {
+    cacheSize: emailCache.size,
+    templates: Object.keys(this.templates).length,
+    connected: transporter.transporter ? true : false,
+    maxConnections: 10,
+    maxMessages: 200
+  };
+}
 }
 
 // Initialize the service
