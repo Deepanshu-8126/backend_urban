@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../core/app_provider.dart';
+import '../../core/api_service.dart';
 
 class BudgetTrackerScreen extends StatefulWidget {
   const BudgetTrackerScreen({super.key});
