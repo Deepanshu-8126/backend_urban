@@ -277,9 +277,20 @@ const startServer = () => {
   io.on('connection', (socket) => {
     console.log('🔌 New Client Connected:', socket.id);
 
-    socket.on('join', (userId) => {
-      socket.join(userId);
-      console.log(`👤 User ${userId} joined their room`);
+    socket.on('join', (data) => {
+      // Data can be a string (userId) or an object { userId, department }
+      const userId = typeof data === 'string' ? data : data.userId;
+      const department = typeof data === 'object' ? data.department : null;
+
+      if (userId) {
+        socket.join(userId);
+        console.log(`👤 User ${userId} joined their room`);
+      }
+
+      if (department) {
+        socket.join(`admin_${department}`);
+        console.log(`💼 Admin joined department room: admin_${department}`);
+      }
     });
 
     socket.on('disconnect', () => {

@@ -9,15 +9,28 @@ const Admin = require('../models/Admin');
  * @param {string} type - 'complaint', 'sos', 'system'
  * @param {object} app - Express app instance to access socketio
  */
-const sendNotification = async (recipientId, title, message, type, app) => {
+const sendNotification = async (recipientId, title, message, type, app, department = null) => {
     try {
         const io = app.get('socketio');
 
         let recipients = [];
         if (recipientId === 'admin') {
-            // Get all admins to notify
-            const admins = await Admin.find().select('_id');
+            // Get admins to notify
+            let query = {};
+            if (department) {
+                // If department is provided, notify only admins of that department
+                query.department = department;
+            }
+
+            const admins = await Admin.find(query).select('_id');
             recipients = admins.map(a => a._id.toString());
+
+            // If no department-specific admins found, fallback to all admins or a general pool
+            if (recipients.length === 0 && department) {
+                console.log(`⚠️ No admins found for department: ${department}. Notifying all admins instead.`);
+                const allAdmins = await Admin.find().select('_id');
+                recipients = allAdmins.map(a => a._id.toString());
+            }
         } else {
             recipients = [recipientId.toString()];
         }
@@ -34,6 +47,13 @@ const sendNotification = async (recipientId, title, message, type, app) => {
 
             // 2. Emit via Socket.io
             if (io) {
+                // Determine room to emit to
+                // If it was an admin notification and we have a department, 
+                // we should probably emit to the department room once, 
+                // but the current service loop is per-admin-id.
+                // Let's stick to per-admin-id for individual badges, 
+                // but we could also broadcast to admin_${department}
+
                 console.log(`🔔 Emitting notification to room: ${targetId}`);
                 io.to(targetId).emit('notification', {
                     _id: notif._id,
@@ -43,6 +63,11 @@ const sendNotification = async (recipientId, title, message, type, app) => {
                     createdAt: notif.createdAt
                 });
             }
+        }
+
+        // Optional: Broadcast to department room for instant global admin UI update if needed
+        if (recipientId === 'admin' && department && io) {
+            io.to(`admin_${department}`).emit('department_alert', { title, message, type });
         }
 
         return { success: true };

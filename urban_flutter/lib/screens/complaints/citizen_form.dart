@@ -175,77 +175,26 @@ class _CitizenFormState extends State<CitizenForm> {
       if (mounted) {
         setState(() => _isLocating = false);
 
-        String errorMsg = e.toString();
         if (errorMsg.contains('timeout') || errorMsg.contains('time')) {
-          errorMsg = 'Location request timed out. Using default location. You can update it later.';
-          _setDefaultLocation();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMsg),
-              duration: const Duration(seconds: 5),
-              action: SnackBarAction(
-                label: "Use Default",
-                onPressed: _setDefaultLocation
-              ),
-            )
-          );
+          errorMsg = 'Location request timed out. Please check your GPS and try again.';
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: "Retry",
+              onPressed: _getLocation
+            ),
+          )
+        );
       }
     }
   }
 
-  void _setDefaultLocation() {
-    setState(() {
-      _currentPosition = Position(
-        latitude: 29.2183,
-        longitude: 79.5132,
-        timestamp: DateTime.now(),
-        accuracy: 0,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0,
-        altitudeAccuracy: 0,
-        headingAccuracy: 0,
-      );
-      _currentAddress = "Haldwani, Uttarakhand (Default Location)";
-      _isLocating = false;
-    });
+  // Removed default location fallback as requested
 
-    if (_mapReady) {
-      _mapController.move(LatLng(29.2183, 79.5132), 13);
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Using default location. You can move the map or retry."),
-        duration: Duration(seconds: 3),
-      )
-    );
-  }
-
-  void _showManualLocationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Location Not Supported"),
-        content: const Text(
-          "Your browser doesn't support automatic location detection.\n\n"
-          "We'll use a default location (Haldwani). You can still file your complaint."
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _setDefaultLocation();
-            },
-            child: const Text("OK, Use Default"),
-          ),
-        ],
-      ),
-    );
-  }
+  // Removed manual location dialog as requested
 
   Future<void> _pickImages() async {
     final ImagePicker picker = ImagePicker();
@@ -333,7 +282,13 @@ class _CitizenFormState extends State<CitizenForm> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_currentPosition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Location is required")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Location is required and must be real. Please enable GPS and allow permissions."),
+          backgroundColor: Colors.red,
+        )
+      );
+      _getLocation();
       return;
     }
 

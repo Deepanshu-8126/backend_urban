@@ -31,12 +31,16 @@ class SocketService {
 
     _socket!.onConnect((_) {
       debugPrint('✅ Socket Connected');
-      // Join private room or admin room
+      
+      final String? department = prefs.getString('department');
+
+      _socket!.emit('join', {
+        'userId': userId,
+        'department': isAdmin ? department : null
+      });
+      
       if (isAdmin) {
-        _socket!.emit('join', 'admin');
-      }
-      if (userId != null) {
-        _socket!.emit('join', userId);
+        debugPrint('💼 Joining Admin Room: $department');
       }
     });
 

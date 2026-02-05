@@ -240,13 +240,14 @@ exports.submitComplaint = async (req, res) => {
 
     await complaint.save();
 
-    // ✅ SEND NOTIFICATION TO ADMINS (Real-Time)
+    // ✅ SEND NOTIFICATION TO ADMINS (Targeted by Department)
     await sendNotification(
       'admin',
-      'New Complaint Submited',
+      'New Complaint Submitted',
       `A new complaint "${title}" has been submitted in ${finalCategory}.`,
       'complaint',
-      req.app
+      req.app,
+      finalDepartment
     );
 
     // Run AI categorization in background
