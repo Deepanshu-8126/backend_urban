@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: emailUser,
-    pass: emailPass.trim()
+    pass: emailPass ? emailPass.trim() : ''
   },
   // Fast delivery settings
   pool: true,
