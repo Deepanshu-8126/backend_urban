@@ -11,44 +11,41 @@ if (!emailUser || !emailPass) {
   // Removed process.exit(1) to prevent server crash
 }
 
-// Create transporter using 'service' preset
-let transporter;
+// Create transporter specifically for Gmail App Password (Optimized for Render)
+console.log('📬 Email Service: Initializing with Gmail SMTP (App Password mode)');
 
-if (process.env.SENDGRID_API_KEY) {
-  console.log('📬 Email Service: Using SendGrid API (Recommended for Render)');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  // We'll use a mock transporter or conditional logic below to handle both
-} else {
-  console.log('📬 Email Service: Attempting Gmail SMTP Fallback');
-  transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // Use STARTTLS
-    auth: {
-      user: emailUser ? emailUser.trim() : '',
-      pass: emailPass ? emailPass.trim() : ''
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    // Shorter timeouts to fail faster on blocked ports
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 45000
-  });
-}
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // Use SSL for Port 465
+  auth: {
+    user: emailUser ? emailUser.trim() : '',
+    pass: emailPass ? emailPass.trim() : ''
+  },
+  tls: {
+    // Relaxed TLS for cloud proxy compatibility
+    rejectUnauthorized: false
+  },
+  // Max connection reliability for Render
+  connectionTimeout: 60000,
+  greetingTimeout: 60000,
+  socketTimeout: 90000,
+  pool: true,
+  maxConnections: 1, // High concurrency often triggers blocks on Render
+  maxMessages: 20
+});
 
-// Verify connection if using SMTP
-if (transporter) {
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error('❌ Email Transporter Verification Failed!');
-      console.error('Error Details:', error.message);
-    } else {
-      console.log('✅ Email Transporter is ready and verified');
-    }
-  });
-}
+// Verify connection configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email Transporter Verification Failed!');
+    console.error('Error Details:', error.message);
+    console.log('💡 TIP: Check if you are using a 16-character Google "App Password" (not your normal password).');
+    console.log('💡 TIP: Render Free Tier sometimes blocks SMTP. If this persists, Port 587 might be throttled.');
+  } else {
+    console.log('✅ Email Transporter is ready and verified');
+  }
+});
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -631,34 +628,19 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
-      // Ensure sgMail is imported and configured if using SendGrid
-      // For this example, assuming sgMail is globally available or imported elsewhere
-      if (process.env.SENDGRID_API_KEY) {
-        const sgMail = require('@sendgrid/mail'); // Assuming SendGrid is installed and configured
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-        const msg = {
-          to: mailOptions.to,
-          from: mailOptions.from || process.env.EMAIL_USER || 'noreply@urbanos.com', // Use mailOptions.from if provided, otherwise default
-          subject: mailOptions.subject,
-          html: mailOptions.html,
-          // SendGrid specific options can be added here if needed, e.g., text, categories, etc.
-        };
-        await sgMail.send(msg);
-        console.log('✅ Email sent successfully via SendGrid to:', mailOptions.to);
-        return true;
-      } else if (transporter) { // Assuming 'transporter' is a nodemailer transporter instance
-        await transporter.sendMail(mailOptions);
-        console.log('✅ Email sent successfully via SMTP to:', mailOptions.to);
-        return true;
+      if (!transporter) {
+        console.error('❌ Email Transporter not initialized');
+        return false;
       }
-      console.error('❌ No email sending mechanism configured (SendGrid or SMTP).');
-      return false;
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully to:', mailOptions.to);
+      console.log('📦 Message ID:', info.messageId);
+      return true;
     } catch (error) {
       console.error('📧 Email delivery failed:', error.message);
-      // Log more details for debugging
-      if (error.response) {
-        console.error('📧 Email service response:', error.response);
+      if (error.code === 'ETIMEDOUT') {
+        console.error('💡 NETWORK ALERT: Render is timing out the SMTP connection.');
       }
       return false;
     }
