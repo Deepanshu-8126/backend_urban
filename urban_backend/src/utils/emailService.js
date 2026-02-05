@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 // Check if environment variables exist
 const emailUser = process.env.EMAIL_USER;
@@ -11,39 +12,43 @@ if (!emailUser || !emailPass) {
 }
 
 // Create transporter specifically for Gmail App Password (Optimized for Render)
-console.log('📬 Email Service: Initializing with Gmail SMTP (App Password mode)');
-console.log('📧 Target Account:', emailUser || 'Not set');
+console.log('📬 Email Service: Initializing Reliability Layer...');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: emailUser ? emailUser.trim() : '',
-    pass: emailPass ? emailPass.trim() : ''
-  },
-  tls: {
-    // Relaxed TLS for cloud proxy compatibility
-    rejectUnauthorized: false
-  },
-  debug: true,
-  logger: true,
-  connectionTimeout: 60000,
-  greetingTimeout: 60000,
-  socketTimeout: 90000
-});
+let transporter;
+const useSendGrid = !!process.env.SENDGRID_API_KEY;
 
-// Verify connection configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email Transporter Verification Failed!');
-    console.error('Error Details:', error.message);
-    if (process.env.RENDER) {
-      console.warn('💡 RENDER ALERT: Render Free Tier often blocks standard SMTP (Ports 465/587).');
-      console.warn('👉 Use a Paid Tier OR Render-friendly API like SendGrid/Mailgun if this persists.');
+if (useSendGrid) {
+  console.log('📬 Mode: SENDGRID (Bypasses Render SMTP Block)');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.log('📬 Mode: SMTP (Gmail App Password)');
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: emailUser ? emailUser.trim() : '',
+      pass: emailPass ? emailPass.trim() : ''
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    debug: true,
+    logger: true,
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 90000
+  });
+
+  transporter.verify((error) => {
+    if (error) {
+      console.error('❌ SMTP Verification Failed:', error.message);
+      if (process.env.RENDER) {
+        console.warn('⚠️ RENDER ALERT: SMTP is likely blocked. PLEASE USE SENDGRID API KEY.');
+      }
+    } else {
+      console.log('✅ SMTP Ready');
     }
-  } else {
-    console.log('✅ Email Transporter is ready and verified');
-  }
-});
+  });
+}
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -626,21 +631,33 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
+      // 1. Try SendGrid first (Reliable on Cloud)
+      if (process.env.SENDGRID_API_KEY) {
+        const msg = {
+          to: mailOptions.to,
+          from: process.env.EMAIL_USER || 'noreply@urbanos.com',
+          subject: mailOptions.subject,
+          html: mailOptions.html
+        };
+        await sgMail.send(msg);
+        console.log('✅ Email sent successfully via SendGrid to:', mailOptions.to);
+        return true;
+      }
+
+      // 2. Fallback to SMTP (Local only)
       if (!transporter) {
-        console.error('❌ Email Transporter not initialized');
+        console.error('❌ No email mechanism available (SendGrid or SMTP)');
         return false;
       }
 
-      console.log(`📧 Attempting to send email to ${mailOptions.to} using App Password...`);
-      const info = await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully!');
-      console.log('📦 Message ID:', info.messageId);
+      console.log(`📧 Attempting to send email to ${mailOptions.to} using SMTP...`);
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully via SMTP!');
       return true;
     } catch (error) {
       console.error('📧 Email delivery failed:', error.message);
       if (error.code === 'ETIMEDOUT' && process.env.RENDER) {
-        console.error('💡 RENDER FIREWALL ERROR: Render is blocking your Gmail connection.');
-        console.error('💡 To fix this on Render, you MUST use an API service or Paid Plan.');
+        console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall. Please use SendGrid API.');
       }
       return false;
     }

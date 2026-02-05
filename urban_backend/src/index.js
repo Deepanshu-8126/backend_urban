@@ -4,21 +4,32 @@ const multer = require('multer');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
+const path = require('path');
+const fs = require('fs');
 
 // ✅ STARTUP DIAGNOSTICS
-console.log('🚀 Starting Smart City Backend...');
+console.log('🚀 Starting Smart City Backend [SECURE MODE]...');
 console.log('📅 Time:', new Date().toISOString());
 console.log('📂 Directory:', process.cwd());
 console.log('🔑 Port:', PORT);
 console.log('📦 Node version:', process.version);
 
-// ✅ RENDER SPECIFIC DIAGNOSTICS
+// ✅ SECURITY MIDDLEWARE
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000,
+  message: 'Too many requests from this IP'
+}));
+
 if (process.env.RENDER) {
   console.log('🌐 Environment: Render Cloud');
   if (!process.env.SENDGRID_API_KEY) {
-    console.warn('⚠️ WARNING: SENDGRID_API_KEY is missing. Gmail SMTP might fail on Render Free Tier due to port blocking.');
-    console.warn('👉 Suggestion: Add SENDGRID_API_KEY to Render Environment Variables for 100% reliable emails.');
+    console.warn('⚠️ WARNING: SENDGRID_API_KEY is missing. Gmail SMTP might fail on Render Free Tier.');
   }
 }
 
@@ -228,27 +239,29 @@ loadRoutes('./intelligence/feedbackLoop/routes', '/api/v1/intelligence/feedback'
 loadRoutes('./intelligence/advanced/routes', '/api/v1/intelligence/advanced', 'intelligence-advanced');
 console.log('✅ City Intelligence Layer loaded successfully');
 // ==================== END INTELLIGENCE LAYER ====================
-app.get('/api/v1/auth/email-diagnostic', async (req, res) => {
-  const { testConnection, getEmailStats } = require('./utils/emailService');
-  const result = await testConnection();
-  const stats = getEmailStats();
+// ✅ PRODUCTION HEALTH CHECK & DIAGNOSTICS
+app.get('/api/v1/health', async (req, res) => {
+  const mongoose = require('mongoose');
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+
   res.json({
-    success: result,
-    stats,
-    env: {
-      hasSendGrid: !!process.env.SENDGRID_API_KEY,
-      hasEmailUser: !!process.env.EMAIL_USER,
-      nodeVersion: process.version,
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production',
+    diagnostics: {
+      database: dbStatus,
+      emailMode: process.env.SENDGRID_API_KEY ? 'SendGrid' : 'SMTP Fallback',
+      uploadsWriteable: fs.existsSync(path.join(__dirname, '../uploads')),
       platform: process.platform
     }
   });
 });
 
-// ✅ SERVE UPLOADED FILES (Using Absolute Path)
-const path = require('path');
+// ✅ SERVE UPLOADED FILES (Strict Absolute Pathing)
 const uploadPath = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
 app.use('/uploads', express.static(uploadPath));
-console.log('✅ Uploads directory configured:', uploadPath);
+console.log('✅ Uploads directory secured:', uploadPath);
 
 // ✅ GLOBAL ERROR HANDLING (JSON RESPONSE)
 app.use((err, req, res, next) => {
