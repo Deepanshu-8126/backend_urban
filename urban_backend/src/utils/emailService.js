@@ -39,7 +39,7 @@ class EmailService {
       statusUpdate: this.getStatusUpdateTemplate(),
       aiAnalysis: this.getAiAnalysisTemplate()
     };
-    
+
     this.aiPersonalization = {
       greetingVariants: [
         'Hello',
@@ -623,7 +623,7 @@ class EmailService {
         .replace('{{EMAIL}}', email);
 
       const mailOptions = {
-        from: emailUser,
+        from: `"Urban OS" <${emailUser}>`,
         to: email,
         subject: '🔐 OTP Verification - Urban Complaint System (Instant)',
         text: `Your 4-digit OTP code is: ${otp}\n\nValid for 5 minutes.\n\nDo not share this OTP with anyone.`,
@@ -635,30 +635,36 @@ class EmailService {
           'Importance': 'High',
           'X-Mailer': 'Urban Complaint System v2.0'
         }
-        // Removed attachments to avoid asset folder error
       };
 
-      await transporter.sendMail(mailOptions);
-      console.log('✅ OTP sent quickly to:', email);
-      
+      console.log(`📧 Attempting to send OTP to ${email}...`);
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ OTP sent successfully to:', email);
+      console.log('📧 Message ID:', info.messageId);
+      console.log('📧 Response:', info.response);
+
       // Cache successful send
       emailCache.set(cacheKey, true);
-      
+
       // Clean cache after 5 minutes
       setTimeout(() => {
         emailCache.delete(cacheKey);
       }, 5 * 60 * 1000);
-      
+
       return true;
     } catch (error) {
-      console.error('📧 Email error:', error.message);
-      
+      console.error('❌ Email send failure for:', email);
+      console.error('❌ Error Name:', error.name);
+      console.error('❌ Error Message:', error.message);
+      if (error.code) console.error('❌ Error Code:', error.code);
+      if (error.command) console.error('❌ Error Command:', error.command);
+
       // Cache failure
       emailCache.set(cacheKey, false);
       setTimeout(() => {
         emailCache.delete(cacheKey);
       }, 60 * 1000);
-      
+
       return false;
     }
   }

@@ -5,6 +5,7 @@ import '../../core/api_service.dart';
 import '../../core/app_provider.dart'; 
 import '../auth/login_screen.dart';
 import 'dart:io'; 
+import '../landing_page.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -74,7 +75,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (c) => const LoginScreen()),
+        MaterialPageRoute(builder: (c) => const LandingPage()), // ✅ Changed to LandingPage
         (route) => false,
       );
     }

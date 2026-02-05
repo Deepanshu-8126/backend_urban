@@ -134,6 +134,7 @@ class ApiService {
         final userRole = data['user']['role'] ?? 'citizen';
         
         await prefs.setBool('isAdmin', userType == 'admin' || userRole.contains('admin'));
+        await prefs.setString('userId', data['user']['id'] ?? data['user']['_id'] ?? ''); // ✅ Added userId persistence
         await prefs.setString('name', data['user']['name']); 
         await prefs.setString('email', data['user']['email']); 
         await prefs.setString('role', userRole);

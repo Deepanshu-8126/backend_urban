@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import '../dashboard/citizen_dashboard.dart';
 import '../dashboard/admin_war_room.dart';
 import 'forgot_password_screen.dart';
+import '../landing_page.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -116,7 +117,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     alignment: Alignment.topLeft,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Color(0xFF6C63FF)),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          // ✅ Fallback to LandingPage if no previous route (prevents black screen)
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LandingPage()),
+                          );
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(height: 20),

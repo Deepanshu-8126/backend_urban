@@ -58,17 +58,25 @@ class AppProvider extends ChangeNotifier {
     
     _userProfileImage = prefs.getString('profilePicturePath');
     
+    _userProfileImage = prefs.getString('profilePicturePath');
+    
     if (_isLoggedIn) {
       _userName = prefs.getString('name');
       _userEmail = prefs.getString('email');
       _userDepartment = prefs.getString('department');
       
-      
+      // Fallback to network image if local path is not set
       _userProfileImage ??= prefs.getString('profilePicture');
       
       debugPrint("🔍 AppProvider Loaded: Name=$_userName, Email=$_userEmail, Pic=$_userProfileImage");
     } else {
-      debugPrint("⚠️ AppProvider: User NOT logged in, but profile pic persists: $_userProfileImage");
+      // ✅ Explicitly clear state if not logged in
+      _userName = null;
+      _userEmail = null;
+      _userProfileImage = null;
+      _userDepartment = null;
+      _token = null;
+      debugPrint("⚠️ AppProvider: User NOT logged in, state cleared.");
     }
     notifyListeners();
   }
@@ -112,24 +120,30 @@ class AppProvider extends ChangeNotifier {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     
-    
+    // ✅ Thorough cleanup of user-related data
     await prefs.remove('token');
     await prefs.remove('isLoggedIn');
     await prefs.remove('isAdmin');
+    await prefs.remove('userId');
     await prefs.remove('name');
     await prefs.remove('email');
     await prefs.remove('profilePicture');
+    await prefs.remove('profilePicturePath');
     await prefs.remove('department');
+    await prefs.remove('chat_ids'); // ✅ Clear local chat index
     
-    
+    // Clear chat-related local storage if any (Handled in screens usually, but good practice here too)
+    // await prefs.remove('chat_ids'); 
     
     _isLoggedIn = false;
     _isAdmin = false;
     _token = null;
     _userName = null;
     _userEmail = null;
+    _userProfileImage = null;
     _userDepartment = null;
     
+    debugPrint("🚪 AppProvider: Logout complete, state cleared.");
     notifyListeners();
   }
 }

@@ -19,6 +19,7 @@ import '../settings/settings_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../admin/city_monitor/city_monitor_screen.dart'; 
 import '../intelligence/intelligence_dashboard.dart'; 
+import '../landing_page.dart';
 
 class AdminWarRoom extends StatefulWidget {
   const AdminWarRoom({super.key});
@@ -498,11 +499,11 @@ class _AdminWarRoomState extends State<AdminWarRoom> with SingleTickerProviderSt
             padding: const EdgeInsets.all(24),
             child: InkWell(
               onTap: () async {
-                 await ApiService.logout();
+                 await Provider.of<AppProvider>(context, listen: false).logout();
                  if (context.mounted) {
                    Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (c) => const LoginScreen()),
+                    MaterialPageRoute(builder: (c) => const LandingPage()), // ✅ Changed to LandingPage
                     (route) => false,
                    );
                  }
