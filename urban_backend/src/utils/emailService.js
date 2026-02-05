@@ -905,6 +905,38 @@ exports.sendStatusUpdate = async (email, userData, statusData) => {
   return await emailService.sendStatusUpdate(email, userData, statusData);
 };
 
+exports.sendSOSUpdate = async (email, userData) => {
+  try {
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #d9534f;">🛡️ Security Alert: SOS Contacts Updated</h2>
+        <p>Hello <strong>${userData.name || 'User'}</strong>,</p>
+        <p>Your emergency contacts or SOS settings were recently updated on the Urban OS platform.</p>
+        <p>If you did not make this change, please secure your account immediately.</p>
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <strong>Action:</strong> SOS Settings Updated<br>
+          <strong>Status:</strong> Active
+        </div>
+        <p>Stay safe!</p>
+        <p>Best regards,<br>Urban OS Security Team</p>
+      </div>
+    `;
+
+    const mailOptions = {
+      from: '"Urban OS Security" <' + process.env.EMAIL_USER + '>',
+      to: email,
+      subject: '🛡️ Urban OS: SOS Contacts Updated',
+      html: htmlContent
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('📧 SOS update email error:', error.message);
+    return false;
+  }
+};
+
 // Export utility functions
 exports.testConnection = () => emailService.testConnection();
 exports.getEmailStats = () => emailService.getEmailStats();

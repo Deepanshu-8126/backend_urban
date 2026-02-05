@@ -17,6 +17,33 @@ const adminSchema = new mongoose.Schema({
     required: true
   },
   isActive: { type: Boolean, default: true },
+
+  // ✅ SOS EMERGENCY CONTACTS (Same as User model)
+  sosEmergencyContacts: [{
+    name: { type: String, required: true },
+    phone: { type: String, required: false },
+    email: { type: String, required: false, lowercase: true, trim: true },
+    relationship: String,
+    primary: { type: Boolean, default: false },
+    verified: { type: Boolean, default: false },
+    contactMethod: { type: String, enum: ['sms', 'email', 'both'], default: 'sms' }
+  }],
+
+  // ✅ SOS SETTINGS
+  sosSettings: {
+    sosActive: { type: Boolean, default: false },
+    smsEnabled: { type: Boolean, default: true },
+    emailEnabled: { type: Boolean, default: true },
+    policeAlert: { type: Boolean, default: false }
+  },
+
+  // ✅ MEDIA CONSENT
+  mediaConsent: {
+    cameraAccess: { type: Boolean, default: false },
+    audioAccess: { type: Boolean, default: false },
+    locationAccess: { type: Boolean, default: true }
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, {

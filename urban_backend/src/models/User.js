@@ -75,7 +75,22 @@ const userSchema = new mongoose.Schema({
       enum: ['sms', 'email', 'both'],
       default: 'sms'
     }
-  }]
+  }],
+
+  // ✅ SOS SETTINGS
+  sosSettings: {
+    sosActive: { type: Boolean, default: false },
+    smsEnabled: { type: Boolean, default: true },
+    emailEnabled: { type: Boolean, default: true },
+    policeAlert: { type: Boolean, default: false }
+  },
+
+  // ✅ MEDIA CONSENT
+  mediaConsent: {
+    cameraAccess: { type: Boolean, default: false },
+    audioAccess: { type: Boolean, default: false },
+    locationAccess: { type: Boolean, default: true }
+  }
 }, {
   timestamps: true
 });

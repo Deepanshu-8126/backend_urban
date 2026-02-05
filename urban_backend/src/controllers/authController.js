@@ -819,6 +819,9 @@ exports.updateSOSContacts = async (req, res) => {
 exports.updateEmergencyContacts = async (req, res) => {
   try {
     const { emergencyContacts, sosSettings, mediaConsent } = req.body;
+    const userId = req.user.id;
+
+    console.log('📝 Updating emergency contacts for:', userId);
 
     // ✅ Use proper validation function
     try {
@@ -830,23 +833,56 @@ exports.updateEmergencyContacts = async (req, res) => {
       });
     }
 
-    const userId = req.user.id;
-
-    const updatedUser = await User.findByIdAndUpdate(
+    // Try User first
+    let updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        emergencyContacts,
-        sosSettings: { ...req.body.sosSettings },
-        mediaConsent: { ...req.body.mediaConsent },
-        'sosSettings.sosActive': true // Activate SOS button
+        $set: {
+          sosEmergencyContacts: emergencyContacts,
+          sosSettings: { ...sosSettings, sosActive: true },
+          mediaConsent: { ...mediaConsent }
+        }
       },
       { new: true }
     ).select('-password');
 
+    // If not in User, try Admin
+    if (!updatedUser) {
+      updatedUser = await Admin.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            sosEmergencyContacts: emergencyContacts,
+            sosSettings: { ...sosSettings, sosActive: true },
+            mediaConsent: { ...mediaConsent }
+          }
+        },
+        { new: true }
+      ).select('-password');
+    }
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // ✅ Send email notification (FULFILLING USER REQUEST)
+    try {
+      const { sendSOSUpdate } = require('../utils/emailService');
+      console.log('📧 Sending update confirmation to:', updatedUser.email);
+      await sendSOSUpdate(updatedUser.email, { name: updatedUser.name });
+    } catch (mailErr) {
+      console.error('📧 Mail notification error:', mailErr.message);
+    }
+
     res.json({
       success: true,
       message: 'Emergency contacts updated successfully',
-      user: updatedUser
+      emergencyContacts: updatedUser.sosEmergencyContacts,
+      sosSettings: updatedUser.sosSettings,
+      mediaConsent: updatedUser.mediaConsent
     });
 
   } catch (error) {
@@ -863,11 +899,22 @@ exports.getEmergencyContacts = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const user = await User.findById(userId).select('emergencyContacts sosSettings mediaConsent');
+    let user = await User.findById(userId).select('sosEmergencyContacts sosSettings mediaConsent');
+
+    if (!user) {
+      user = await Admin.findById(userId).select('sosEmergencyContacts sosSettings mediaConsent');
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
 
     res.json({
       success: true,
-      emergencyContacts: user.emergencyContacts,
+      emergencyContacts: user.sosEmergencyContacts,
       sosSettings: user.sosSettings,
       mediaConsent: user.mediaConsent
     });
