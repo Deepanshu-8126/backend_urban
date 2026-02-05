@@ -126,19 +126,21 @@ app.use((req, res, next) => {
 });
 
 // ✅ OPERATION LOGGING MIDDLEWARE
-// ✅ SIMPLIFIED LOGGING FOR SMOOTHNESS
-console.log(`📥 INCOMING: ${req.method} ${req.path}`);
-// Removed deep body logging for performance
+app.use((req, res, next) => {
+  const startTime = Date.now();
+  // ✅ SIMPLIFIED LOGGING FOR SMOOTHNESS
+  console.log(`📥 INCOMING: ${req.method} ${req.path}`);
+  // Removed deep body logging for performance
 
-const originalSend = res.send;
-res.send = function (data) {
-  const endTime = Date.now();
-  const duration = endTime - startTime;
-  console.log(`📤 OUTGOING: ${req.method} ${req.path} | ${res.statusCode} | ${duration}ms`);
-  return originalSend.call(this, data);
-};
+  const originalSend = res.send;
+  res.send = function (data) {
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    console.log(`📤 OUTGOING: ${req.method} ${req.path} | ${res.statusCode} | ${duration}ms`);
+    return originalSend.call(this, data);
+  };
 
-next();
+  next();
 });
 
 // ✅ DIRECT DEBUG ROUTE (Bypass Everything)
@@ -199,6 +201,7 @@ loadRoutes('./routes/newComplaintRoutes', '/api/v1/complaints-v2', 'complaint-v2
 loadRoutes('./routes/aiRoutes', '/api/v1/ai', 'ai');
 loadRoutes('./routes/cityMonitorRoutes', '/api/v1/city', 'city-monitor');
 loadRoutes('./routes/analyticsRoutes', '/api/v1/analytics', 'analytics');
+loadRoutes('./routes/notificationRoutes', '/api/v1/notifications', 'notifications');
 
 // ==================== CITY INTELLIGENCE LAYER ROUTES ====================
 console.log('🧠 Loading City Intelligence Layer...');
