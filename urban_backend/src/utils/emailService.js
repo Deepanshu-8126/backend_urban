@@ -649,7 +649,7 @@ class EmailService {
         console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
         const msg = {
           to: mailOptions.to,
-          from: mailOptions.from || process.env.EMAIL_USER || 'noreply@urbanos.com',
+          from: 'deepanshukapri4@gmail.com', // Explicitly use Verified Sender to avoid "Forbidden" error
           subject: mailOptions.subject,
           html: mailOptions.html
         };
