@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Sign in to continue to Urban OS",
+                    "Sign in to continue to Smart City",
                     style: GoogleFonts.roboto(
                       fontSize: 16,
                       color: Colors.grey[600],

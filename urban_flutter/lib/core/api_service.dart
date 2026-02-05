@@ -1242,4 +1242,38 @@ class ApiService {
       return {};
     }
   }
+  // ✅ FETCH NOTIFICATIONS
+  static Future<Map<String, dynamic>> getNotifications() async {
+    return _authenticatedGet('/notifications');
+  }
+
+  // ✅ MARK NOTIFICATION READ
+  static Future<bool> markNotificationRead(String id) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      await http.patch(
+        Uri.parse('$baseUrl/notifications/$id/read'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ✅ MARK ALL READ
+  static Future<bool> markAllNotificationsRead() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      await http.patch(
+        Uri.parse('$baseUrl/notifications/read-all'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }

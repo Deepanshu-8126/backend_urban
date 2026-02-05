@@ -27,7 +27,7 @@ class UrbanOS extends StatelessWidget {
       builder: (context, isDarkMode, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Urban OS',
+          title: 'Smart City',
           themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
           theme: ThemeData(
             primarySwatch: Colors.blue,

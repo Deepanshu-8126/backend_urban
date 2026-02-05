@@ -43,6 +43,7 @@ dependencies:
   # Animations (NEW!)
   lottie: ^3.3.2
   shimmer: ^3.0.0
+  animate_do: ^3.1.0
   
   # Icons (NEW!)
   font_awesome_flutter: ^10.12.0
@@ -72,6 +73,7 @@ flutter:
   uses-material-design: true
   
   assets:
+    - assets/
     - assets/images/
     - assets/lottie/
     - assets/icons/

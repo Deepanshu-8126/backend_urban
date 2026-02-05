@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../core/app_provider.dart';
 import 'landing_page.dart';
 import 'dashboard/admin_war_room.dart';
@@ -77,60 +78,79 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     return Scaffold(
       backgroundColor: Colors.white, 
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.location_city_rounded,
-                    size: 80,
-                    color: Colors.blue[800],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            
+            Pulse(
+              duration: const Duration(seconds: 2),
+              infinite: true,
+              child: Container(
+                width: 150,
+                height: 150,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.withOpacity(0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    fit: BoxFit.contain, // Changed for better logo fit
                   ),
                 ),
-                const SizedBox(height: 20),
-                
-                Text(
-                  "Urban OS",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[900],
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                
-                Text(
-                  "Smart City Management System",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 50),
-                
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: Colors.blue[800],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 30),
+            
+            FadeInUp(
+              duration: const Duration(milliseconds: 800),
+              child: Text(
+                "SMART CITY",
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            
+            FadeInUp(
+              delay: const Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 800),
+              child: Text(
+                "Chota Kadam, Badalta Bharat 🇮🇳",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.orange[800],
+                  fontWeight: FontWeight.w600,
+                  fontStyle: FontStyle.italic
+                ),
+              ),
+            ),
+            const SizedBox(height: 60),
+            
+            FadeIn(
+              delay: const Duration(seconds: 1),
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: Colors.blue[800],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -62,10 +62,22 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
     if (result['success'] == true) {
       setState(() => _otpSent = true);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("OTP Sent to Email!"), backgroundColor: Colors.green)
-        );
+     if (mounted) {
+        // Show warning if email wasn't sent
+        final emailSent = result['emailSent'] ?? true;
+        if (!emailSent) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("⚠️ Email delivery unavailable. Check console for OTP."),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 5)
+            )
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("✅ OTP sent to your email!"), backgroundColor: Colors.green)
+          );
+        }
       }
     } else {
       final error = result['error'] ?? "Registration Failed";
@@ -75,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
               context: context,
               builder: (context) => AlertDialog(
                 title: const Row(children: [Icon(Icons.error_outline, color: Colors.orange), SizedBox(width: 8), Text("Account Exists")]),
-                content: Text("The email '$email' is already registered.\n\nWould you like to login instead?"),
+                content: Text("The email '$email' is already registered.\\n\\nWould you like to login instead?"),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
                   ElevatedButton(

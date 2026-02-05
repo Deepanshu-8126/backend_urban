@@ -248,35 +248,21 @@ class _CitizenFormState extends State<CitizenForm> {
   }
 
   Future<void> _pickImages() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
-              onTap: () async {
-                Navigator.pop(context);
-                final ImagePicker picker = ImagePicker();
-                final XFile? image = await picker.pickImage(source: ImageSource.camera);
-                if (image != null) setState(() => _selectedImages.add(image));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
-              onTap: () async {
-                Navigator.pop(context);
-                final ImagePicker picker = ImagePicker();
-                final List<XFile> images = await picker.pickMultiImage();
-                if (images.isNotEmpty) setState(() => _selectedImages.addAll(images));
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+    final ImagePicker picker = ImagePicker();
+    // Direct Camera Access (No Gallery Option)
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 50, // Optimize for faster upload
+      );
+      if (image != null) {
+        setState(() => _selectedImages.add(image));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Could not access camera")),
+      );
+    }
   }
 
   Future<void> _pickVideo() async {
@@ -383,12 +369,14 @@ class _CitizenFormState extends State<CitizenForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isDark ? Colors.black : Colors.grey[50],
       appBar: AppBar(
         title: const Text("File New Complaint"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: 0,
       ),
       body: Form(
@@ -402,10 +390,12 @@ class _CitizenFormState extends State<CitizenForm> {
               controller: _titleController,
               decoration: InputDecoration(
                 hintText: "e.g., Pothole on Main St",
+                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true, 
-                fillColor: Colors.white
+                fillColor: isDark ? Colors.grey[900] : Colors.white
               ),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               validator: (v) => v!.isEmpty ? "Required" : null,
             ),
             const SizedBox(height: 20),
@@ -417,10 +407,12 @@ class _CitizenFormState extends State<CitizenForm> {
               maxLines: 5,
               decoration: InputDecoration(
                 hintText: "Describe the issue in detail...",
+                hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: isDark ? Colors.grey[900] : Colors.white,
               ),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               validator: (v) => v!.isEmpty ? "Required" : null,
             ),
             const SizedBox(height: 20),
@@ -433,7 +425,7 @@ class _CitizenFormState extends State<CitizenForm> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Colors.grey[900] : Colors.white,
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -444,7 +436,7 @@ class _CitizenFormState extends State<CitizenForm> {
                     Expanded(
                       child: Text(
                         _selectedCategory,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black),
                       ),
                     ),
                     const Icon(Icons.arrow_drop_down),
@@ -607,7 +599,7 @@ class _CitizenFormState extends State<CitizenForm> {
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.indigo)),
+      child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueAccent)),
     );
   }
 

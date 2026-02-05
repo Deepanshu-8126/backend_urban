@@ -99,7 +99,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               ),
               const SizedBox(width: 12),
               Text(
-                "URBAN OS",
+                "SMART CITY",
                 style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -139,7 +139,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           const SizedBox(height: 24),
           
           Text(
-            "Urban Governance\nMade Simple",
+            "Chota Kadam,\nBadalta Bharat 🇮🇳",
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 42,
@@ -631,8 +631,8 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Text(
-            "URBAN OS",
+           Text(
+            "SMART CITY",
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -649,7 +649,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           ),
           const SizedBox(height: 16),
           Text(
-            "© 2024 Urban OS. All rights reserved.",
+            "© 2026 Smart City. All rights reserved.",
             style: GoogleFonts.roboto(
               fontSize: 12,
               color: Colors.grey[500],

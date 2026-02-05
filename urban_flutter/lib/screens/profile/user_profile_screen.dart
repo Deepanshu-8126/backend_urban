@@ -98,14 +98,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           children: [
                             CircleAvatar(
                               radius: 60,
-                              
+                              backgroundColor: Colors.grey[200],
                               backgroundImage: _localImage != null
                                   ? FileImage(_localImage!) as ImageProvider
-                                  : (user!['profilePicture'] != null && user!['profilePicture'] != ''
-                                      ? NetworkImage('${ApiService.baseUrl.replaceAll('/api/v1', '')}${user!['profilePicture']}?t=${DateTime.now().millisecondsSinceEpoch}')
-                                      : null),
-                              child: (_localImage == null && (user!['profilePicture'] == null || user!['profilePicture'] == ''))
-                                  ? const Icon(Icons.person, size: 60)
+                                  : (user!['profilePicture'] != null && 
+                                     user!['profilePicture'].toString().isNotEmpty && 
+                                     !user!['profilePicture'].toString().startsWith('/data/')) // Ignore local paths
+                                      ? NetworkImage(
+                                          user!['profilePicture'].toString().startsWith('http')
+                                              ? "${user!['profilePicture']}?t=${DateTime.now().millisecondsSinceEpoch}"
+                                              : '${ApiService.baseUrl.replaceAll('/api/v1', '')}${user!['profilePicture']}?t=${DateTime.now().millisecondsSinceEpoch}'
+                                        )
+                                      : null,
+                              child: (_localImage == null && 
+                                     (user!['profilePicture'] == null || 
+                                      user!['profilePicture'] == '' || 
+                                      user!['profilePicture'].toString().startsWith('/data/')))
+                                  ? const Icon(Icons.person, size: 60, color: Colors.grey)
                                   : null,
                             ),
                             Positioned(
