@@ -651,13 +651,12 @@ class EmailService {
           to: mailOptions.to,
           from: {
             email: 'deepanshukapri4@gmail.com',
-            name: 'Urban OS Support'
+            name: 'Urban OS Team'
           },
           subject: mailOptions.subject,
-          text: mailOptions.text || 'Your Urban OS verification code is included in this email.', // Plain text fallback for Anti-Spam
+          text: mailOptions.text,
           html: mailOptions.html,
           headers: {
-            'List-Unsubscribe': `<mailto:deepanshukapri4@gmail.com?subject=unsubscribe>`,
             'X-Entity-Ref-ID': `urban-os-${Date.now()}`
           }
         };
@@ -705,9 +704,9 @@ class EmailService {
 
       const mailOptions = {
         to: email,
-        from: `"Urban OS" <${emailUser}>`,
-        subject: `🔐 Your Urban OS verification code is: ${otp}`,
-        text: `Your Urban OS verification code is: ${otp}. This code expires in 10 minutes.`, // Plain text version
+        from: `"Urban OS Team" <${emailUser}>`,
+        subject: `Verification Code: ${otp}`, // CLEAN SUBJECT (No Emojis triggers)
+        text: `Your Urban OS verification code is: ${otp}. Do not share this code.`,
         html: htmlContent
       };
 
