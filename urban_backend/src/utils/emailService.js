@@ -642,6 +642,23 @@ class EmailService {
     `;
   }
 
+  // Helper to standardize email options with Anti-Spam headers
+  _getStandardOptions(to, subject, html, textOverride) {
+    return {
+      to,
+      from: {
+        email: 'deepanshukapri4@gmail.com', // Verified Sender
+        name: 'Urban OS Team'
+      },
+      subject,
+      text: textOverride || 'Please view this email in an HTML compatible client.',
+      html,
+      headers: {
+        'X-Entity-Ref-ID': `urban-os-${Date.now()}`
+      }
+    };
+  }
+
   async sendEmail(mailOptions) {
     try {
       // 1. Try SendGrid first (Production - works on Render)
@@ -727,7 +744,12 @@ class EmailService {
         .replace('{{ADMIN_MESSAGE}}', complaintData.adminMessage || 'No updates yet')
         .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      return await this.sendEmail(mailOptions);
+      return await this.sendEmail(this._getStandardOptions(
+        email,
+        `Complaint Update: ${complaintData.title}`,
+        htmlContent,
+        `Update for your complaint: ${complaintData.title}. Status: ${complaintData.status}. Admin Message: ${complaintData.adminMessage || 'None'}.`
+      ));
     } catch (error) {
       console.error('📧 Complaint update error:', error.message);
       return false;
@@ -748,7 +770,12 @@ class EmailService {
         .replace('{{CONTACT}}', complaintData.userContact || 'N/A')
         .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      return await this.sendEmail(mailOptions);
+      return await this.sendEmail(this._getStandardOptions(
+        adminEmail,
+        `🚨 High Priority Complaint: ${complaintData.title}`,
+        htmlContent,
+        `New High Priority Complaint.\nTitle: ${complaintData.title}\nPriority: ${complaintData.priorityScore}`
+      ));
     } catch (error) {
       console.error('📧 Admin notification error:', error.message);
       return false;
@@ -766,14 +793,12 @@ class EmailService {
         .replace('{{PRIORITY}}', analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low')
         .replace('{{RESPONSE_TIME}}', analysisData.priorityScore >= 5 ? '1-2 days' : '3-5 days');
 
-      const mailOptions = {
-        from: `"Urban OS AI" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: '🤖 AI Analysis Complete - Your Complaint',
-        html: htmlContent
-      };
-
-      return await this.sendEmail(mailOptions);
+      return await this.sendEmail(this._getStandardOptions(
+        email,
+        '🤖 AI Analysis Complete - Your Complaint',
+        htmlContent,
+        `AI Analysis for your complaint.\nCategory: ${analysisData.category}\nConfidence: ${(analysisData.aiConfidence * 100).toFixed(1)}%\nPriority: ${analysisData.priorityScore >= 5 ? 'High' : analysisData.priorityScore >= 3 ? 'Medium' : 'Low'}`
+      ));
     } catch (error) {
       console.error('📧 AI analysis error:', error.message);
       return false;
@@ -785,7 +810,12 @@ class EmailService {
       const htmlContent = this.templates.welcome
         .replace('{{USERNAME}}', userData.name || 'User');
 
-      return await this.sendEmail(mailOptions);
+      return await this.sendEmail(this._getStandardOptions(
+        email,
+        'Welcome to Urban OS!',
+        htmlContent,
+        `Welcome to Urban OS, ${userData.name}! We are glad to have you on board.`
+      ));
     } catch (error) {
       console.error('📧 Welcome email error:', error.message);
       return false;
@@ -816,7 +846,12 @@ class EmailService {
         .replace('{{ESTIMATED_COMPLETION}}', this.getEstimatedCompletion(statusData.status))
         .replace('{{ADMIN_COMMENT}}', statusData.adminMessage || 'No comments yet');
 
-      return await this.sendEmail(mailOptions);
+      return await this.sendEmail(this._getStandardOptions(
+        email,
+        `Status Update: ${statusData.title}`,
+        htmlContent,
+        `Your complaint status has been updated to: ${statusData.status.toUpperCase()}.\nAdmin/Officer Message: ${statusData.adminMessage || 'No comments'}.\nProgress: ${this.calculateProgress(statusData.status)}`
+      ));
     } catch (error) {
       console.error('📧 Status update error:', error.message);
       return false;
