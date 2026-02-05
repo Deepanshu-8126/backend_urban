@@ -357,7 +357,8 @@ exports.verifyOtp = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          profilePicture: user.profilePicture, // ✅ Return profile picture
+          role: user.role,
+          profilePicture: user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.BASE_URL || 'https://urban-os-backend.onrender.com'}${user.profilePicture}`) : '',
           userType: 'citizen'
         }
       });
@@ -594,13 +595,14 @@ exports.resetPassword = async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // FIX: Do NOT hash here because 'save()' hook in User/Admin model already hashes it.
+    // Double hashing causes login failure.
 
     if (admin) {
-      admin.password = hashedPassword;
+      admin.password = newPassword; // Plain text, hook will hash
       await admin.save();
     } else {
-      user.password = hashedPassword;
+      user.password = newPassword; // Plain text, hook will hash
       await user.save();
     }
 
@@ -648,7 +650,9 @@ exports.updateProfile = async (req, res) => {
     let profilePicture = '';
 
     if (req.file) {
-      profilePicture = '/uploads/profiles/' + req.file.filename;
+      // Return FULL URL for frontend persistence
+      const baseUrl = process.env.BASE_URL || 'https://urban-os-backend.onrender.com';
+      profilePicture = `${baseUrl}/uploads/profiles/${req.file.filename}`;
     }
 
     const updateData = {};

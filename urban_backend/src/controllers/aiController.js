@@ -569,7 +569,7 @@ exports.saveChatSession = async (req, res) => {
         userId,
         userEmail,
         userName,
-        sessionId,
+        sessionId: sessionId || require('uuid').v4(), // Generate if missing
         title: title || 'New Chat',
         messages
       });
