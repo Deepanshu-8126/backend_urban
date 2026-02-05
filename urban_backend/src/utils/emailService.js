@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 // Check if environment variables exist
 const emailUser = process.env.EMAIL_USER;
@@ -10,40 +11,43 @@ if (!emailUser || !emailPass) {
   // Removed process.exit(1) to prevent server crash
 }
 
-// Create transporter with manual settings to avoid 'service' preset quirks on Render
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465, // Trying 465 again but with specific TLS settings
-  secure: true, // SSL
-  auth: {
-    user: emailUser ? emailUser.trim() : '',
-    pass: emailPass ? emailPass.trim() : ''
-  },
-  tls: {
-    // DO NOT fail on certificate mismatches (useful for some cloud proxies)
-    rejectUnauthorized: false,
-    // Specify stable TLS versions
-    minVersion: 'TLSv1.2'
-  },
-  // Aggressive timeouts to handle slow cloud connections
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 60000,
-  socketTimeout: 90000,
-  debug: true,
-  logger: true
-});
+// Create transporter using 'service' preset
+let transporter;
 
-console.log('📬 Email Service: Attempting manual connection on Port 465 with TLS fallbacks');
+if (process.env.SENDGRID_API_KEY) {
+  console.log('📬 Email Service: Using SendGrid API (Recommended for Render)');
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  // We'll use a mock transporter or conditional logic below to handle both
+} else {
+  console.log('📬 Email Service: Attempting Gmail SMTP Fallback');
+  transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Use STARTTLS
+    auth: {
+      user: emailUser ? emailUser.trim() : '',
+      pass: emailPass ? emailPass.trim() : ''
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 90000
+  });
+}
 
-// Verify connection configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email Transporter Verification Failed!');
-    console.error('Error Details:', error);
-  } else {
-    console.log('✅ Email Transporter is ready and verified');
-  }
-});
+// Verify connection if using SMTP
+if (transporter) {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ Email Transporter Verification Failed!');
+      console.error('Error Details:', error.message);
+    } else {
+      console.log('✅ Email Transporter is ready and verified');
+    }
+  });
+}
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -624,17 +628,45 @@ class EmailService {
     `;
   }
 
+  async sendEmail(mailOptions) {
+    try {
+      // Ensure sgMail is imported and configured if using SendGrid
+      // For this example, assuming sgMail is globally available or imported elsewhere
+      if (process.env.SENDGRID_API_KEY) {
+        const sgMail = require('@sendgrid/mail'); // Assuming SendGrid is installed and configured
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+        const msg = {
+          to: mailOptions.to,
+          from: mailOptions.from || process.env.EMAIL_USER || 'noreply@urbanos.com', // Use mailOptions.from if provided, otherwise default
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+          // SendGrid specific options can be added here if needed, e.g., text, categories, etc.
+        };
+        await sgMail.send(msg);
+        console.log('✅ Email sent successfully via SendGrid to:', mailOptions.to);
+        return true;
+      } else if (transporter) { // Assuming 'transporter' is a nodemailer transporter instance
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Email sent successfully via SMTP to:', mailOptions.to);
+        return true;
+      }
+      console.error('❌ No email sending mechanism configured (SendGrid or SMTP).');
+      return false;
+    } catch (error) {
+      console.error('📧 Email delivery failed:', error.message);
+      // Log more details for debugging
+      if (error.response) {
+        console.error('📧 Email service response:', error.response);
+      }
+      return false;
+    }
+  }
+
   async sendOtpEmail(email, otp) {
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       console.log('📧 Invalid email:', email);
       return false;
-    }
-
-    // Check cache first
-    const cacheKey = `otp_${email}_${otp}`;
-    if (emailCache.has(cacheKey)) {
-      console.log('📧 Using cached OTP email for:', email);
-      return emailCache.get(cacheKey);
     }
 
     try {
@@ -643,48 +675,15 @@ class EmailService {
         .replace('{{EMAIL}}', email);
 
       const mailOptions = {
-        from: `"Urban OS" <${emailUser}>`,
         to: email,
-        subject: '🔐 OTP Verification - Urban Complaint System (Instant)',
-        text: `Your 4-digit OTP code is: ${otp}\n\nValid for 5 minutes.\n\nDo not share this OTP with anyone.`,
-        html: htmlContent,
-        priority: 'high',
-        headers: {
-          'X-Priority': '1',
-          'X-MSMail-Priority': 'High',
-          'Importance': 'High',
-          'X-Mailer': 'Urban Complaint System v2.0'
-        }
+        from: `"Urban OS" <${emailUser}>`,
+        subject: `🔐 Your Urban OS verification code is: ${otp}`,
+        html: htmlContent
       };
 
-      console.log(`📧 Attempting to send OTP to ${email}...`);
-      const info = await transporter.sendMail(mailOptions);
-      console.log('✅ OTP sent successfully to:', email);
-      console.log('📧 Message ID:', info.messageId);
-      console.log('📧 Response:', info.response);
-
-      // Cache successful send
-      emailCache.set(cacheKey, true);
-
-      // Clean cache after 5 minutes
-      setTimeout(() => {
-        emailCache.delete(cacheKey);
-      }, 5 * 60 * 1000);
-
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
-      console.error('❌ Email send failure for:', email);
-      console.error('❌ Error Name:', error.name);
-      console.error('❌ Error Message:', error.message);
-      if (error.code) console.error('❌ Error Code:', error.code);
-      if (error.command) console.error('❌ Error Command:', error.command);
-
-      // Cache failure
-      emailCache.set(cacheKey, false);
-      setTimeout(() => {
-        emailCache.delete(cacheKey);
-      }, 60 * 1000);
-
+      console.error('📧 OTP send error:', error.message);
       return false;
     }
   }
@@ -699,16 +698,7 @@ class EmailService {
         .replace('{{ADMIN_MESSAGE}}', complaintData.adminMessage || 'No updates yet')
         .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      const mailOptions = {
-        from: emailUser,
-        to: email,
-        subject: `📋 Complaint Update: ${complaintData.title}`,
-        html: htmlContent,
-        priority: 'normal'
-      };
-
-      await transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('📧 Complaint update error:', error.message);
       return false;
@@ -729,16 +719,7 @@ class EmailService {
         .replace('{{CONTACT}}', complaintData.userContact || 'N/A')
         .replace('{{TIMESTAMP}}', new Date().toLocaleString());
 
-      const mailOptions = {
-        from: emailUser,
-        to: adminEmail,
-        subject: `🚨 New Complaint: ${complaintData.title}`,
-        html: htmlContent,
-        priority: 'high'
-      };
-
-      await transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('📧 Admin notification error:', error.message);
       return false;
@@ -757,15 +738,13 @@ class EmailService {
         .replace('{{RESPONSE_TIME}}', analysisData.priorityScore >= 5 ? '1-2 days' : '3-5 days');
 
       const mailOptions = {
-        from: emailUser,
+        from: `"Urban OS AI" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: '🤖 AI Analysis Complete - Your Complaint',
-        html: htmlContent,
-        priority: 'normal'
+        html: htmlContent
       };
 
-      await transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('📧 AI analysis error:', error.message);
       return false;
@@ -777,16 +756,7 @@ class EmailService {
       const htmlContent = this.templates.welcome
         .replace('{{USERNAME}}', userData.name || 'User');
 
-      const mailOptions = {
-        from: emailUser,
-        to: email,
-        subject: '🎉 Welcome to Urban Complaint System!',
-        html: htmlContent,
-        priority: 'normal'
-      };
-
-      await transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('📧 Welcome email error:', error.message);
       return false;
@@ -817,16 +787,7 @@ class EmailService {
         .replace('{{ESTIMATED_COMPLETION}}', this.getEstimatedCompletion(statusData.status))
         .replace('{{ADMIN_COMMENT}}', statusData.adminMessage || 'No comments yet');
 
-      const mailOptions = {
-        from: emailUser,
-        to: email,
-        subject: `📊 Status Update: ${statusData.title}`,
-        html: htmlContent,
-        priority: 'normal'
-      };
-
-      await transporter.sendMail(mailOptions);
-      return true;
+      return await this.sendEmail(mailOptions);
     } catch (error) {
       console.error('📧 Status update error:', error.message);
       return false;
@@ -938,14 +899,13 @@ exports.sendSOSUpdate = async (email, userData) => {
     `;
 
     const mailOptions = {
-      from: '"Urban OS Security" <' + process.env.EMAIL_USER + '>',
       to: email,
+      from: `"Urban OS Security" <${process.env.EMAIL_USER}>`,
       subject: '🛡️ Urban OS: SOS Contacts Updated',
       html: htmlContent
     };
 
-    await transporter.sendMail(mailOptions);
-    return true;
+    return await emailService.sendEmail(mailOptions);
   } catch (error) {
     console.error('📧 SOS update email error:', error.message);
     return false;

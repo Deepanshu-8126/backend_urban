@@ -30,7 +30,8 @@ console.log('✅ CORS configured');
 // ✅ MULTER CONFIGURATION
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
+    const path = require('path');
+    const uploadDir = path.join(__dirname, '../uploads');
     const fs = require('fs');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -218,9 +219,10 @@ loadRoutes('./intelligence/feedbackLoop/routes', '/api/v1/intelligence/feedback'
 loadRoutes('./intelligence/advanced/routes', '/api/v1/intelligence/advanced', 'intelligence-advanced');
 console.log('✅ City Intelligence Layer loaded successfully');
 // ==================== END INTELLIGENCE LAYER ====================
-// ✅ SERVE UPLOADED FILES
-app.use('/uploads', express.static('uploads'));
-console.log('✅ Uploads directory configured');
+// ✅ SERVE UPLOADED FILES (Using Absolute Path)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+console.log('✅ Uploads directory configured:', path.join(__dirname, '../uploads'));
 
 // ✅ GLOBAL ERROR HANDLING (JSON RESPONSE)
 app.use((err, req, res, next) => {
