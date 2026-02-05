@@ -161,11 +161,16 @@ exports.sendOtp = async (req, res) => {
     if (!contact.includes('@')) {
       return res.status(400).json({ success: false, error: 'Phone OTP not supported' });
     }
-    const otp = generateOtp(contact);
-    const sent = await sendOtpEmail(contact, otp);
-    if (!sent) {
-      return res.status(500).json({ success: false, error: 'Failed to send OTP' });
-    }
+    const otp = await generateOtp(contact);
+
+    // 🔥 FIRE & FORGET (Non-blocking)
+    sendOtpEmail(contact, otp)
+      .then(sent => {
+        if (sent) console.log(`✅ [Background] OTP email sent to ${contact}`);
+        else console.warn(`⚠️ [Background] OTP email failed for ${contact}`);
+      })
+      .catch(err => console.error(`❌ [Background] Email Error: ${err.message}`));
+
     return res.json({ success: true, message: 'OTP sent' });
   } catch (error) {
     return res.status(500).json({ success: false, error: 'Failed to send OTP' });
@@ -207,7 +212,7 @@ exports.signup = async (req, res) => {
 
     // Allow any email to proceed to OTP
 
-    const otp = generateOtp(email);
+    const otp = await generateOtp(email);
 
     // 🔥 FIRE & FORGET (Non-blocking)
     // Don't await this! Let it run in background.
@@ -549,14 +554,16 @@ exports.forgotPassword = async (req, res) => {
     }
 
     const otp = await generateOtp(email);
-    const emailSent = await sendOtpEmail(email, otp);
 
-    if (!emailSent) {
-      console.log('❌ Failed to send OTP for password recovery:', email);
-      return res.status(500).json({ success: false, error: 'Failed to send OTP email' });
-    }
+    // 🔥 FIRE & FORGET (Non-blocking for better UX)
+    sendOtpEmail(email, otp)
+      .then(sent => {
+        if (sent) console.log(`✅ [Background] Recovery email sent to ${email}`);
+        else console.warn(`⚠️ [Background] Recovery email failed for ${email}`);
+      })
+      .catch(err => console.error(`❌ [Background] Recovery Email Error: ${err.message}`));
 
-    console.log('✅ Password recovery OTP sent to:', email);
+    console.log('✅ Password recovery process initiated for:', email);
     return res.json({
       success: true,
       message: 'OTP sent to your email',

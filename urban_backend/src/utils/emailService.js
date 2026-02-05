@@ -721,10 +721,17 @@ class EmailService {
 
       const mailOptions = {
         to: email,
-        from: `"Urban OS Team" <${emailUser}>`,
-        subject: `Verification Code: ${otp}`, // CLEAN SUBJECT (No Emojis triggers)
-        text: `Your Urban OS verification code is: ${otp}. Do not share this code.`,
-        html: htmlContent
+        from: {
+          email: 'deepanshukapri4@gmail.com',
+          name: 'Smart City Team' // Professional Name
+        },
+        subject: `Verification Code: ${otp}`, // Clean subject
+        text: `Your Smart City verification code is: ${otp}. Valid for 5 minutes.`,
+        html: htmlContent,
+        headers: {
+          'X-Entity-Ref-ID': `otp-${Date.now()}`
+        },
+        replyTo: 'deepanshukapri4@gmail.com'
       };
 
       return await this.sendEmail(mailOptions);
