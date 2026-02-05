@@ -10,24 +10,32 @@ if (!emailUser || !emailPass) {
   // Removed process.exit(1) to prevent server crash
 }
 
-// Create transporter with fast settings
+// Create transporter with SSL settings (Port 465 is often more stable on cloud)
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // TLS
-  requireTLS: true,
+  port: 465,
+  secure: true, // SSL
   auth: {
     user: emailUser,
     pass: emailPass ? emailPass.trim() : ''
   },
-  // Even higher timeouts for stable connection on cloud platforms
-  connectionTimeout: 20000, // 20 seconds
-  greetingTimeout: 20000,
-  socketTimeout: 30000,
-  dnsTimeout: 10000,
+  // High timeouts for stable connection on cloud platforms
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 45000,
+  dnsTimeout: 15000,
   pool: true,
   maxConnections: 3,
-  maxMessages: 50
+  maxMessages: 100
+});
+
+// Verify connection configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email Transporter Error:', error.message);
+  } else {
+    console.log('✅ Email Transporter is ready to deliver messages');
+  }
 });
 
 // Cache for faster reuse
