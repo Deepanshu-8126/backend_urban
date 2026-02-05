@@ -18,6 +18,9 @@ console.log('📦 Node version:', process.version);
 // ✅ SECURITY MIDDLEWARE
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression'); // ✅ New GZIP Compression
+
+app.use(compression()); // ✅ COMPRESS ALL RESPONSES
 
 app.use(helmet());
 app.use(rateLimit({
@@ -123,48 +126,19 @@ app.use((req, res, next) => {
 });
 
 // ✅ OPERATION LOGGING MIDDLEWARE
-app.use((req, res, next) => {
-  const startTime = Date.now();
+// ✅ SIMPLIFIED LOGGING FOR SMOOTHNESS
+console.log(`📥 INCOMING: ${req.method} ${req.path}`);
+// Removed deep body logging for performance
 
-  // Log incoming request
-  console.log(`📥 INCOMING REQUEST: ${req.method} ${req.path}`);
-  console.log(`📋 Request Body:`, req.body);
-  console.log(`🔑 Headers:`, {
-    authorization: req.headers.authorization ? 'Bearer Token Present' : 'No Token',
-    'content-type': req.headers['content-type']
-  });
+const originalSend = res.send;
+res.send = function (data) {
+  const endTime = Date.now();
+  const duration = endTime - startTime;
+  console.log(`📤 OUTGOING: ${req.method} ${req.path} | ${res.statusCode} | ${duration}ms`);
+  return originalSend.call(this, data);
+};
 
-  // Log response
-  const originalSend = res.send;
-  res.send = function (data) {
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-
-    try {
-      const responseData = JSON.parse(data);
-      console.log(`📤 RESPONSE SENT: ${req.method} ${req.path} | Status: ${res.statusCode} | Duration: ${duration}ms`);
-      console.log(`✅ Response Data:`, responseData);
-
-      // ✅ DATABASE OPERATION DETECTION
-      if (responseData.success === true) {
-        if (req.path.includes('/auth/sos/contacts')) {
-          console.log('💾 DATABASE OPERATION: Emergency contacts added to user document');
-        }
-        if (req.path.includes('/sos/trigger')) {
-          console.log('💾 DATABASE OPERATION: SOS record should be created in SOS collection');
-        }
-        if (req.path.includes('/complaints') && req.method === 'POST') {
-          console.log('💾 DATABASE OPERATION: Complaint record should be created in complaints collection');
-        }
-      }
-    } catch (e) {
-      console.log(`📤 RESPONSE SENT: ${req.method} ${req.path} | Status: ${res.statusCode} | Duration: ${duration}ms`);
-    }
-
-    return originalSend.call(this, data);
-  };
-
-  next();
+next();
 });
 
 // ✅ DIRECT DEBUG ROUTE (Bypass Everything)
