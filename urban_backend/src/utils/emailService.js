@@ -10,23 +10,30 @@ if (!emailUser || !emailPass) {
   // Removed process.exit(1) to prevent server crash
 }
 
-// Create transporter using 'service' preset (often better for cloud platforms)
+// Create transporter with manual settings to avoid 'service' preset quirks on Render
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465, // Trying 465 again but with specific TLS settings
+  secure: true, // SSL
   auth: {
     user: emailUser ? emailUser.trim() : '',
     pass: emailPass ? emailPass.trim() : ''
   },
-  // Full logging for debugging Render connection issues
+  tls: {
+    // DO NOT fail on certificate mismatches (useful for some cloud proxies)
+    rejectUnauthorized: false,
+    // Specify stable TLS versions
+    minVersion: 'TLSv1.2'
+  },
+  // Aggressive timeouts to handle slow cloud connections
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 60000,
+  socketTimeout: 90000,
   debug: true,
-  logger: true,
-  // High timeouts to handle cloud network latency
-  connectionTimeout: 40000, // 40 seconds
-  greetingTimeout: 40000,
-  socketTimeout: 60000,
+  logger: true
 });
 
-console.log('📬 Email Service: Attempting to initialize with service: gmail');
+console.log('📬 Email Service: Attempting manual connection on Port 465 with TLS fallbacks');
 
 // Verify connection configuration
 transporter.verify((error, success) => {
