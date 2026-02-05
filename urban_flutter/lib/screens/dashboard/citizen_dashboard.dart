@@ -1,11 +1,16 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'dart:io';
 import '../../core/app_provider.dart';
 import '../../core/api_service.dart';
  
 import '../complaints/admin_view.dart';
-import '../citizen/hall_booking_screen.dart';
+import '../citizen/citizen_impact_screen.dart';
+
+// ... (existing imports)
+
+
 import '../disaster/citizen_sos_screen.dart';
 import '../complaints/citizen_form.dart';
 import '../complaints/my_complaints_screen.dart';
@@ -20,6 +25,7 @@ import '../admin/city_monitor_screen.dart';
 import '../settings/settings_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../landing_page.dart';
+import '../development/development_tracker_screen.dart'; // NEW
 
 class CitizenDashboard extends StatefulWidget {
   const CitizenDashboard({super.key});
@@ -71,7 +77,8 @@ class _CitizenDashboardState extends State<CitizenDashboard> with SingleTickerPr
       {"title": "SOS Emergency", "icon": Icons.emergency, "color": Colors.red, "page": const CitizenSOSScreen()},
       {"title": "AQI Monitor", "icon": Icons.air, "color": Colors.tealAccent, "page": const AqiMonitorScreen()},
       {"title": "Property Tax", "icon": Icons.payments, "color": Colors.green, "page": const TaxCalculatorScreen()},
-      {"title": "Hall Booking", "icon": Icons.event_seat, "color": Colors.purpleAccent, "page": const HallBookingScreen()},
+      {"title": "Public Funds Tracker", "icon": Icons.analytics, "color": Colors.teal, "page": const DevelopmentTrackerScreen()}, // NEW
+      // Hall Booking removed as per request
       {"title": "CityBrain AI", "icon": Icons.psychology, "color": Colors.deepPurpleAccent, "page": const CityBrainBot()},
     ];
 
@@ -201,15 +208,28 @@ class _CitizenDashboardState extends State<CitizenDashboard> with SingleTickerPr
         children: [
           Row(
             children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                  backgroundImage: provider.userProfileImage != null && provider.userProfileImage != ''
-                    ? NetworkImage("${ApiService.baseUrl.replaceAll('/api/v1', '')}${provider.userProfileImage}?t=${DateTime.now().millisecondsSinceEpoch}")
-                    : null,
-                  child: provider.userProfileImage == null || provider.userProfileImage == ''
-                    ? Text((provider.userName ?? "C")[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 18))
-                    : null,
+                Consumer<AppProvider>(
+                  builder: (context, provider, _) {
+                    ImageProvider? backgroundImage;
+                    if (provider.userProfileImage != null && provider.userProfileImage!.isNotEmpty) {
+                      if (provider.userProfileImage!.contains('http')) {
+                         backgroundImage = NetworkImage(provider.userProfileImage!);
+                      } else if (provider.userProfileImage!.contains('/') || provider.userProfileImage!.contains('\\')) {
+                         backgroundImage = FileImage(File(provider.userProfileImage!));
+                      } else {
+                         backgroundImage = NetworkImage("${ApiService.baseUrl.replaceAll('/api/v1', '')}${provider.userProfileImage}?t=${DateTime.now().millisecondsSinceEpoch}");
+                      }
+                    }
+
+                    return CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                      backgroundImage: backgroundImage,
+                      child: backgroundImage == null
+                        ? Text((provider.userName ?? "C")[0].toUpperCase(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 18))
+                        : null,
+                    );
+                  }
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { createProperty, getProperties, calculateTax, getRevenueStats } = require('../controllers/propertyController');
+const { getMyProperties, payPropertyTax } = require('../controllers/propertyController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-router.post('/', createProperty);
-router.get('/', getProperties);
-router.get('/revenue-stats', getRevenueStats);
-router.post('/calculate-tax', calculateTax);
+router.get('/my-properties', authenticateToken, getMyProperties);
+router.post('/pay', authenticateToken, payPropertyTax);
 
 module.exports = router;

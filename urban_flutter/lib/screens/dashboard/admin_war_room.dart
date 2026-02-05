@@ -20,6 +20,9 @@ import '../notifications/notifications_screen.dart';
 import '../admin/city_monitor/city_monitor_screen.dart'; 
 import '../intelligence/intelligence_dashboard.dart'; 
 import '../landing_page.dart';
+import '../admin/traffic_control_screen.dart';
+import '../admin/traffic_control_screen.dart';
+import '../development/development_tracker_screen.dart'; // NEW
 
 class AdminWarRoom extends StatefulWidget {
   const AdminWarRoom({super.key});
@@ -57,8 +60,9 @@ class _AdminWarRoomState extends State<AdminWarRoom> with SingleTickerProviderSt
     {"title": "AQI Monitor", "cat": "Admin", "icon": Icons.air, "color": Colors.teal, "page": const AqiMonitorScreen()},
     {"title": "SOS Controller", "cat": "Disaster", "icon": Icons.emergency_share, "color": Colors.redAccent, "page": const CitizenSOSScreen()},
     {"title": "Budget Tracker", "cat": "Property", "icon": Icons.account_balance_wallet, "color": Colors.blueGrey, "page": const BudgetTrackerScreen()},
+    {"title": "Development Tracker", "cat": "Admin", "icon": Icons.construction, "color": Colors.orange, "page": const DevelopmentTrackerScreen()}, // NEW
     {"title": "Property Tax", "cat": "Property", "icon": Icons.payments, "color": Colors.green, "page": const TaxCalculatorScreen()},
-    {"title": "City Monitor", "cat": "Admin", "icon": Icons.monitor_heart, "color": Colors.red, "page": const CityMonitorScreen()},
+    {"title": "Traffic Command", "cat": "Admin", "icon": Icons.traffic, "color": Colors.redAccent, "page": const TrafficControlScreen()},
     {"title": "City Intelligence", "cat": "AI", "icon": Icons.psychology_outlined, "color": Colors.purple, "page": const IntelligenceDashboardScreen()}, 
     {"title": "CityBrain AI", "cat": "AI", "icon": Icons.psychology, "color": Colors.deepPurpleAccent, "page": const CityBrainBot()},
   ];

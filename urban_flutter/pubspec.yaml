@@ -29,6 +29,7 @@ dependencies:
   # google_maps_flutter: ^2.5.0
   geolocator: ^10.1.0
   geocoding: ^2.1.1
+  battery_plus: ^6.0.3
   
   # Media
   image_picker: ^1.0.5
@@ -44,6 +45,7 @@ dependencies:
   lottie: ^3.3.2
   shimmer: ^3.0.0
   animate_do: ^3.1.0
+  animated_text_kit: ^4.2.2
   
   # Icons (NEW!)
   font_awesome_flutter: ^10.12.0

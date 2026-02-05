@@ -27,8 +27,8 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
 
   Future<void> _fetchBudgetAnalytics() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
-    // Uses the new backend endpoint we just created
-    final url = Uri.parse('${ApiService.baseUrl}/analytics/revenue');
+    // Correct endpoint for real analytics
+    final url = Uri.parse('${ApiService.baseUrl}/revenue/analytics?fiscalYear=$_fiscalYear');
     
     try {
       final response = await http.get(
@@ -45,21 +45,8 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
         throw Exception('Failed to load analytics');
       }
     } catch (e) {
+      debugPrint("Budget Fetch Error: $e");
       setState(() => _isLoading = false);
-      // Fallback fake data for demo if API fails/is empty
-      _analyticsData = {
-        'totalBudget': 5000000000,
-        'totalSpent': 3420000000,
-        'utilization': 68.4,
-        'breakdown': [
-          {'_id': 'Infrastructure', 'allocated': 1200000000, 'spent': 1020000000},
-          {'_id': 'Health', 'allocated': 800000000, 'spent': 480000000},
-          {'_id': 'Education', 'allocated': 500000000, 'spent': 225000000},
-          {'_id': 'Sanitation', 'allocated': 900000000, 'spent': 828000000},
-          {'_id': 'Transport', 'allocated': 600000000, 'spent': 350000000},
-        ],
-        'dangerZone': ['Infrastructure', 'Sanitation']
-      };
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'auth/login_screen.dart';
 import 'auth/register_screen.dart';
 
@@ -76,21 +77,21 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle, // Circular Shape
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: const Color(0xFF6C63FF).withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.all(2), // Border padding
+                child: ClipOval( // Clip image to circle
                   child: Image.asset(
                     'assets/logo.png',
                     fit: BoxFit.cover,
@@ -98,14 +99,31 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                "SMART CITY",
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF6C63FF),
-                  letterSpacing: 1.2,
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   Text(
+                    "SMART CITY", 
+                    style: GoogleFonts.poppins(
+                      fontSize: 22, 
+                      fontWeight: FontWeight.bold, 
+                      color: const Color(0xFF6C63FF),
+                      letterSpacing: 1.0, 
+                      height: 1.0
+                    )
+                   ),
+                   Text(
+                    "URBAN OS", 
+                    style: GoogleFonts.poppins(
+                      fontSize: 14, 
+                      fontWeight: FontWeight.w600, 
+                      color: Colors.black54,
+                      letterSpacing: 2.0
+                    )
+                   ),
+                ],
               ),
             ],
           ),
@@ -138,14 +156,51 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           ),
           const SizedBox(height: 24),
           
-          Text(
-            "Chota Kadam,\nBadalta Bharat 🇮🇳",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 42,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1E1E1E),
-              height: 1.2,
+          SizedBox(
+            height: 80,
+            child: DefaultTextStyle(
+              style: GoogleFonts.poppins(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1E1E1E),
+                height: 1.2,
+                shadows: [
+                  Shadow(
+                    blurRadius: 10.0,
+                    color: Colors.black.withOpacity(0.1),
+                    offset: const Offset(2.0, 2.0),
+                  ),
+                ],
+              ),
+              child: AnimatedTextKit(
+                repeatForever: true,
+                isRepeatingAnimation: true,
+                displayFullTextOnTap: true,
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    'Chota Kadam,', 
+                    speed: const Duration(milliseconds: 100),
+                    cursor: '|',
+                  ),
+                  TypewriterAnimatedText(
+                    'Badalta Bharat 🇮🇳', 
+                    speed: const Duration(milliseconds: 100),
+                    cursor: '|',
+                    textStyle: GoogleFonts.poppins(color: const Color(0xFF6C63FF)) // Highlight color
+                  ),
+                  TypewriterAnimatedText(
+                    'Smart City,', 
+                    speed: const Duration(milliseconds: 100),
+                    cursor: '|',
+                  ),
+                  TypewriterAnimatedText(
+                    'Smart Future 🚀', 
+                    speed: const Duration(milliseconds: 100),
+                    cursor: '|',
+                    textStyle: GoogleFonts.poppins(color: const Color(0xFF6C63FF))
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -477,6 +532,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   Widget _buildAllFeatures() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+      decoration: BoxDecoration(
+        color: Colors.grey[50], // Light background for contrast
+      ),
       child: Column(
         children: [
           Text(
@@ -504,31 +562,31 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
-                  "SOS Emergency System with Auto-Location",
-                  "Smart Complaint Management",
-                  "Live Grievance Map with Heatmap",
-                  "Photo Upload & Evidence Tracking",
-                  "Automatic Location Detection",
-                  "Real-time Push Notifications",
-                  "Admin Dashboard with Analytics",
-                  "City Monitor (Trends & Intelligence)",
-                  "AI-Powered Anomaly Detection",
-                  "Live Activity Feed",
-                  "Performance Metrics & Badges",
-                  "Department Efficiency Tracking",
-                  "Area-wise Logistics Management",
-                  "Dark Mode Support",
-                  "Secure Authentication & Authorization",
-                  "Responsive Design (Mobile & Web)",
-                  "Category-based Filtering",
-                  "Time-range Filters (24h/7d/30d)",
-                  "Pull-to-Refresh Updates",
-                  "Delete Complaints",
-                  "Status Tracking (Pending/Working/Solved)",
-                  "Emergency Contact Integration",
+                  _buildFeatureChip(Icons.sos, "SOS Emergency System"),
+                  _buildFeatureChip(Icons.report_problem, "Smart Complaint Mgmt"),
+                  _buildFeatureChip(Icons.map, "Live Grievance Map"),
+                  _buildFeatureChip(Icons.camera_alt, "Photo Evidence Tracking"),
+                  _buildFeatureChip(Icons.my_location, "Auto-Location Detect"),
+                  _buildFeatureChip(Icons.notifications_active, "Real-time Push Notifs"),
+                  _buildFeatureChip(Icons.dashboard, "Admin Dashboard"),
+                  _buildFeatureChip(Icons.query_stats, "City Monitor Analytics"),
+                  _buildFeatureChip(Icons.psychology, "AI Anomaly Detection"),
+                  _buildFeatureChip(Icons.dynamic_feed, "Live Activity Feed"),
+                  _buildFeatureChip(Icons.military_tech, "Gamification Badges"),
+                  _buildFeatureChip(Icons.leaderboard, "Citizen Leaderboard"),
+                  _buildFeatureChip(Icons.traffic, "Traffic Command Center"),
+                  _buildFeatureChip(Icons.account_balance_wallet, "Property Tax Engine"),
+                  _buildFeatureChip(Icons.receipt_long, "Digital Receipts"),
+                  _buildFeatureChip(Icons.insights, "Dept Efficiency Track"),
+                  _buildFeatureChip(Icons.dark_mode, "Dark Mode Support"),
+                  _buildFeatureChip(Icons.verified_user, "Secure Auth (JWT)"),
+                  _buildFeatureChip(Icons.phone_android, "Responsive Mobile UI"),
+                  _buildFeatureChip(Icons.filter_list, "Advanced Filtering"),
+                  _buildFeatureChip(Icons.contact_phone, "Emergency Contacts"),
+                  _buildFeatureChip(Icons.delete, "Data Management"),
                 ].asMap().entries.map((entry) {
                   final index = entry.key;
-                  final text = entry.value;
+                  final widget = entry.value;
                   return TweenAnimationBuilder<double>(
                     duration: Duration(milliseconds: 400 + (index * 50)),
                     tween: Tween(begin: 0.0, end: 1.0),
@@ -542,11 +600,44 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                         ),
                       );
                     },
-                    child: _buildCheckItem(text, constraints.maxWidth),
+                    child: widget,
                   );
                 }).toList(),
               );
             }
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF6C63FF)),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
           ),
         ],
       ),

@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import '../../core/api_service.dart';
 
+import 'package:battery_plus/battery_plus.dart';
+
 class CitizenSOSScreen extends StatefulWidget {
   const CitizenSOSScreen({super.key});
 
@@ -17,6 +19,7 @@ class _CitizenSOSScreenState extends State<CitizenSOSScreen> with SingleTickerPr
   late AnimationController _controller;
   Timer? _timer;
   int _secondsPressed = 0;
+  final Battery _battery = Battery();
 
   @override
   void initState() {
@@ -78,15 +81,17 @@ class _CitizenSOSScreenState extends State<CitizenSOSScreen> with SingleTickerPr
   Future<void> _triggerSOS() async {
     try {
       setState(() {
-        statusMessage = "Acquiring Location...";
+        statusMessage = "Acquiring Location & Battery...";
       });
 
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      int batteryLevel = await _battery.batteryLevel;
       
       final result = await ApiService.triggerSOS(
         lat: position.latitude,
         lng: position.longitude,
         message: "Emergency! User needs help immediately.",
+        battery: batteryLevel
       );
 
       if (result['success'] == true) {
@@ -131,12 +136,13 @@ class _CitizenSOSScreenState extends State<CitizenSOSScreen> with SingleTickerPr
           timeLimit: const Duration(seconds: 10)
         );
         
-        
+        int currentBattery = await _battery.batteryLevel;
+
         await ApiService.updateSOSLocation(
           activeSOSId!, 
           position.latitude, 
           position.longitude, 
-          80 
+          currentBattery 
         );
         
         

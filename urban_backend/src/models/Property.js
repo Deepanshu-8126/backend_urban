@@ -5,10 +5,10 @@ const propertySchema = new mongoose.Schema({
   ward: { type: String, required: true },
   ownerName: { type: String, required: true },
   area: { type: Number, required: true }, // sq. meters
-  propertyType: { 
-    type: String, 
+  propertyType: {
+    type: String,
     enum: ['residential', 'commercial', 'industrial', 'mixed'],
-    required: true 
+    required: true
   },
   location: {
     type: {
@@ -22,8 +22,13 @@ const propertySchema = new mongoose.Schema({
   assessedValue: { type: Number, default: 0 },
   taxPaid: { type: Boolean, default: false },
   lastAssessmentDate: { type: Date, default: Date.now },
+  marketValue: { type: Number, default: 0 },
+  taxDue: { type: Number, default: 0 },
+  zone: { type: String, enum: ['A', 'B', 'C'], default: 'B' }, // A=Posh, B=Normal, C=Outer
+  lastTaxPaidDate: { type: Date },
+  receiptId: { type: String },
   createdAt: { type: Date, default: Date.now }
-});
+}, { strict: false });
 
 propertySchema.index({ "location": "2dsphere" });
 module.exports = mongoose.model('Property', propertySchema);

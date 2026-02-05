@@ -202,6 +202,10 @@ loadRoutes('./routes/aiRoutes', '/api/v1/ai', 'ai');
 loadRoutes('./routes/cityMonitorRoutes', '/api/v1/city', 'city-monitor');
 loadRoutes('./routes/analyticsRoutes', '/api/v1/analytics', 'analytics');
 loadRoutes('./routes/notificationRoutes', '/api/v1/notifications', 'notifications');
+loadRoutes('./routes/notificationRoutes', '/api/v1/notifications', 'notifications');
+loadRoutes('./routes/citizenImpactRoutes', '/api/v1/citizen-impact', 'citizen-impact');
+loadRoutes('./routes/projectRoutes', '/api/v1/projects', 'projects'); // NEW: Smart Development Tracker
+loadRoutes('./routes/propertyRoutes', '/api/v1/property', 'property');
 
 // ==================== CITY INTELLIGENCE LAYER ROUTES ====================
 console.log('🧠 Loading City Intelligence Layer...');

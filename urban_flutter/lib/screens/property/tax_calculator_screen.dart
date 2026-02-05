@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:animate_do/animate_do.dart';
 import '../../core/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'my_properties_screen.dart';
 
 class TaxCalculatorScreen extends StatefulWidget {
   const TaxCalculatorScreen({super.key});
@@ -144,110 +146,136 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
 
   Widget _buildCalculatorTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Property Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
-                    const SizedBox(height: 20),
-                    
-                    TextFormField(
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.green.shade700, Colors.green.shade400], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 10))],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Property Valuation", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  const Text("Calculate accurate property tax instantly.", style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 24),
+                  
+                  Container(
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: TextFormField(
                       controller: _propertyIdController,
                       decoration: const InputDecoration(
                         labelText: "Property ID (Optional)", 
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.qr_code),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        prefixIcon: Icon(Icons.qr_code, color: Colors.green),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    DropdownButtonFormField<String>(
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Container(
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: DropdownButtonFormField<String>(
                       initialValue: selectedType,
-                      decoration: const InputDecoration(labelText: "Property Type", border: OutlineInputBorder(), prefixIcon: Icon(Icons.category)),
+                      decoration: const InputDecoration(labelText: "Property Type", border: InputBorder.none, prefixIcon: Icon(Icons.domain, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                       items: propertyTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
                       onChanged: (v) => setState(() => selectedType = v!),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    DropdownButtonFormField<String>(
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Container(
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: DropdownButtonFormField<String>(
                       initialValue: selectedWard,
-                      decoration: const InputDecoration(labelText: "Ward / Zone", border: OutlineInputBorder(), prefixIcon: Icon(Icons.map)),
+                      decoration: const InputDecoration(labelText: "Ward / Zone", border: InputBorder.none, prefixIcon: Icon(Icons.location_on, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                       items: wards.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
                       onChanged: (v) => setState(() => selectedWard = v!),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    TextFormField(
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  Container(
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: TextFormField(
                       controller: _areaController,
                       keyboardType: TextInputType.number,
                       validator: (v) => v!.isEmpty ? "Enter Area" : null,
                       decoration: const InputDecoration(
                         labelText: "Area (Sq. Meters)", 
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.square_foot),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        prefixIcon: Icon(Icons.square_foot, color: Colors.green),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: isCalcLoading ? null : _calculateTax,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: isCalcLoading 
-                          ? const CircularProgressIndicator(color: Colors.white) 
-                          : const Text("CALCULATE VALUATION", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                  const SizedBox(height: 30),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: isCalcLoading ? null : _calculateTax,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.green.shade800,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                    )
-                  ],
-                ),
+                      child: isCalcLoading 
+                        ? const CircularProgressIndicator(color: Colors.green) 
+                        : const Text("CALCULATE VALUATION", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  )
+                ],
               ),
             ),
           ),
           
           if (result != null) ...[
             const SizedBox(height: 24),
-            Card(
-              color: Colors.green.shade50,
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
+            FadeInUp(
+              duration: const Duration(milliseconds: 500),
+              child: Container(
                 padding: const EdgeInsets.all(24.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
+                  border: Border.all(color: Colors.green.withOpacity(0.1)),
+                ),
                 child: Column(
                   children: [
-                    const Text("Estimated Annual Tax", style: TextStyle(fontSize: 16, color: Colors.green)),
+                    const Text("Estimated Annual Tax", style: TextStyle(fontSize: 16, color: Colors.grey)),
                     const SizedBox(height: 8),
                     Text(
                       "₹${result!['totalTax']}",
-                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.green),
+                      style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.green),
                     ),
-                    const Divider(height: 30),
+                    const Divider(height: 40),
                     _row("Base Rate", "₹${result!['ratePerSqM']} / sq.m"),
                     _row("Ward Multiplier", "${result!['wardMultiplier']}x"),
                     _row("Total Area", "${result!['area']} sq.m"),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.payment),
-                      label: const Text("PAY TAX NOW"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.payment),
+                        label: const Text("PAY TAX NOW"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
                       ),
                     )
                   ],
