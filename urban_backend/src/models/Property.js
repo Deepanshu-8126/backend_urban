@@ -7,8 +7,18 @@ const propertySchema = new mongoose.Schema({
   area: { type: Number, required: true }, // sq. meters
   propertyType: {
     type: String,
-    enum: ['residential', 'commercial', 'industrial', 'mixed'],
+    enum: ['residential', 'commercial', 'industrial', 'mixed', 'hospital', 'hotel', 'open_land'],
     required: true
+  },
+  constructionType: {
+    type: String,
+    enum: ['rcc', 'simple', 'patra_shed'],
+    default: 'rcc'
+  },
+  occupancyType: {
+    type: String,
+    enum: ['self', 'tenanted'],
+    default: 'self'
   },
   location: {
     type: {

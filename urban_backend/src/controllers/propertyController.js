@@ -1,15 +1,32 @@
 const Property = require('../models/Property');
 
-// Helper: Calculate Tax
+// Helper: Calculate Tax based on Govt Standard (Rateable Value method)
 const calculateTaxAmount = (property) => {
-  const baseRates = { 'A': 100, 'B': 70, 'C': 40 }; // Rate per sq.m
-  const typeMultipliers = { 'residential': 1, 'commercial': 3, 'industrial': 2, 'mixed': 1.5 };
+  // Standard Rent per sq. meter per month (Haldwani / Indian Govt Scale)
+  const standardRentMatrix = {
+    'A': { residential: 8, commercial: 25, industrial: 15, mixed: 12, hospital: 10, hotel: 20, open_land: 5 },
+    'B': { residential: 6, commercial: 20, industrial: 12, mixed: 10, hospital: 8, hotel: 15, open_land: 4 },
+    'C': { residential: 4, commercial: 15, industrial: 10, mixed: 8, hospital: 6, hotel: 12, open_land: 3 }
+  };
 
-  const zoneRate = baseRates[property.zone] || 50;
-  const typeMultiplier = typeMultipliers[property.propertyType] || 1;
+  const zone = property.zone || 'B';
+  const type = property.propertyType || 'residential';
 
-  // Formula: Area * ZoneRate * TypeMultiplier
-  return property.area * zoneRate * typeMultiplier;
+  const stdRent = standardRentMatrix[zone][type] || standardRentMatrix['B']['residential'];
+
+  // Rateable Value (RV) = Area * StdRent * 12 months * 0.9 (10% maintenance deduction)
+  const rateableValue = property.area * stdRent * 12 * 0.9;
+
+  // Tax Rate (approx 15% of RV for this municipality)
+  const taxRate = 0.15;
+
+  const annualTax = rateableValue * taxRate;
+
+  return {
+    annualTax: Math.round(annualTax),
+    rateableValue: Math.round(rateableValue),
+    stdRent: stdRent
+  };
 };
 
 exports.getMyProperties = async (req, res) => {
@@ -20,10 +37,11 @@ exports.getMyProperties = async (req, res) => {
 
     // Dynamically calculate tax for display
     const enrichedProperties = properties.map(prop => {
-      const tax = calculateTaxAmount(prop);
+      const taxDetails = calculateTaxAmount(prop);
       return {
         ...prop._doc,
-        calculatedTax: tax,
+        calculatedTax: taxDetails.annualTax,
+        rateableValue: taxDetails.rateableValue,
         status: prop.taxPaid ? 'PAID' : 'DUE'
       };
     });
@@ -57,6 +75,39 @@ exports.payPropertyTax = async (req, res) => {
         propertyId: property.propertyId,
         amountPaid: amount,
         owner: property.ownerName
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.calculatePropertyTax = async (req, res) => {
+  try {
+    const { propertyType, area, ward, propertyId, constructionType, occupancyType } = req.body;
+
+    // Map ward to zone (Mock logic for Haldwani)
+    const zone = ward.includes('1') ? 'A' : (ward.includes('4') ? 'C' : 'B');
+
+    const mockProperty = {
+      propertyType,
+      area: parseFloat(area),
+      zone,
+      constructionType,
+      occupancyType
+    };
+
+    const taxDetails = calculateTaxAmount(mockProperty);
+
+    res.json({
+      success: true,
+      taxDetails: {
+        totalTax: taxDetails.annualTax,
+        ratePerSqM: taxDetails.stdRent,
+        rateableValue: taxDetails.rateableValue,
+        wardMultiplier: 1.0,
+        area: area,
+        zone: zone
       }
     });
   } catch (error) {

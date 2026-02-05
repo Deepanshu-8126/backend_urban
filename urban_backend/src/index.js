@@ -205,7 +205,6 @@ loadRoutes('./routes/notificationRoutes', '/api/v1/notifications', 'notification
 loadRoutes('./routes/notificationRoutes', '/api/v1/notifications', 'notifications');
 loadRoutes('./routes/citizenImpactRoutes', '/api/v1/citizen-impact', 'citizen-impact');
 loadRoutes('./routes/projectRoutes', '/api/v1/projects', 'projects'); // NEW: Smart Development Tracker
-loadRoutes('./routes/propertyRoutes', '/api/v1/property', 'property');
 
 // ==================== CITY INTELLIGENCE LAYER ROUTES ====================
 console.log('🧠 Loading City Intelligence Layer...');

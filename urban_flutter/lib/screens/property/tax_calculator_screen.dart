@@ -24,8 +24,13 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
   Map<String, dynamic>? result;
   bool isCalcLoading = false;
 
-  final List<String> propertyTypes = ['residential', 'commercial', 'industrial', 'mixed'];
+  final List<String> propertyTypes = ['residential', 'commercial', 'industrial', 'mixed', 'hospital', 'hotel', 'open_land'];
   final List<String> wards = ['Ward 1', 'Ward 2', 'Ward 3', 'Ward 4'];
+  final List<String> constructionTypes = ['rcc', 'simple', 'patra_shed'];
+  final List<String> occupancyTypes = ['self', 'tenanted'];
+
+  String selectedConstruction = 'rcc';
+  String selectedOccupancy = 'self';
 
   
   List<dynamic> nearbyProperties = [];
@@ -104,6 +109,8 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
       area: double.parse(_areaController.text),
       ward: selectedWard,
       propertyId: _propertyIdController.text.isNotEmpty ? _propertyIdController.text : null,
+      constructionType: selectedConstruction,
+      occupancyType: selectedOccupancy,
     );
 
     setState(() {
@@ -194,11 +201,40 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
                   Container(
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                     child: DropdownButtonFormField<String>(
-                      initialValue: selectedWard,
+                      value: selectedWard,
                       decoration: const InputDecoration(labelText: "Ward / Zone", border: InputBorder.none, prefixIcon: Icon(Icons.location_on, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                       items: wards.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
                       onChanged: (v) => setState(() => selectedWard = v!),
                     ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                          child: DropdownButtonFormField<String>(
+                            value: selectedConstruction,
+                            decoration: const InputDecoration(labelText: "Construction", border: InputBorder.none, prefixIcon: Icon(Icons.build, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+                            items: constructionTypes.map((c) => DropdownMenuItem(value: c, child: Text(c.toUpperCase()))).toList(),
+                            onChanged: (v) => setState(() => selectedConstruction = v!),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                          child: DropdownButtonFormField<String>(
+                            value: selectedOccupancy,
+                            decoration: const InputDecoration(labelText: "Occupancy", border: InputBorder.none, prefixIcon: Icon(Icons.people, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
+                            items: occupancyTypes.map((o) => DropdownMenuItem(value: o, child: Text(o.toUpperCase()))).toList(),
+                            onChanged: (v) => setState(() => selectedOccupancy = v!),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   

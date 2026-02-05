@@ -721,7 +721,9 @@ class ApiService {
     required String propertyType,
     required double area,
     required String ward,
-    String? propertyId
+    String? propertyId,
+    String constructionType = 'rcc',
+    String occupancyType = 'self'
   }) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -737,7 +739,9 @@ class ApiService {
           'propertyType': propertyType,
           'area': area,
           'ward': ward,
-          'propertyId': propertyId
+          'propertyId': propertyId,
+          'constructionType': constructionType,
+          'occupancyType': occupancyType
         }),
       );
 
