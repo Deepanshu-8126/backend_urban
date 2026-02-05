@@ -649,9 +649,17 @@ class EmailService {
         console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
         const msg = {
           to: mailOptions.to,
-          from: 'deepanshukapri4@gmail.com', // Explicitly use Verified Sender to avoid "Forbidden" error
+          from: {
+            email: 'deepanshukapri4@gmail.com',
+            name: 'Urban OS Support'
+          },
           subject: mailOptions.subject,
-          html: mailOptions.html
+          text: mailOptions.text || 'Your Urban OS verification code is included in this email.', // Plain text fallback for Anti-Spam
+          html: mailOptions.html,
+          headers: {
+            'List-Unsubscribe': `<mailto:deepanshukapri4@gmail.com?subject=unsubscribe>`,
+            'X-Entity-Ref-ID': `urban-os-${Date.now()}`
+          }
         };
 
         try {
@@ -699,6 +707,7 @@ class EmailService {
         to: email,
         from: `"Urban OS" <${emailUser}>`,
         subject: `🔐 Your Urban OS verification code is: ${otp}`,
+        text: `Your Urban OS verification code is: ${otp}. This code expires in 10 minutes.`, // Plain text version
         html: htmlContent
       };
 
