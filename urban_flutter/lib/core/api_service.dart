@@ -222,6 +222,12 @@ class ApiService {
         if (data['user']['department'] != null) {
           await prefs.setString('department', data['user']['department']);
         }
+
+        if (data['user']['profilePicture'] != null && data['user']['profilePicture'].toString().isNotEmpty) {
+          await prefs.setString('profilePicture', data['user']['profilePicture']);
+        } else {
+          await prefs.remove('profilePicture');
+        }
         
         return true;
       }

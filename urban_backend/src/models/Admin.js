@@ -17,6 +17,7 @@ const adminSchema = new mongoose.Schema({
     required: true
   },
   isActive: { type: Boolean, default: true },
+  profilePicture: { type: String, default: '' },
 
   // ✅ SOS EMERGENCY CONTACTS (Same as User model)
   sosEmergencyContacts: [{

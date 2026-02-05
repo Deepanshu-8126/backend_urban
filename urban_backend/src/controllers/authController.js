@@ -331,6 +331,7 @@ exports.verifyOtp = async (req, res) => {
           email: admin.email,
           role: admin.role,
           department: admin.department,
+          profilePicture: admin.profilePicture ? (admin.profilePicture.startsWith('http') ? admin.profilePicture : `${process.env.BASE_URL || 'https://urban-backend-28dc.onrender.com'}${admin.profilePicture}`) : '',
           userType: 'admin'
         }
       });
@@ -374,8 +375,7 @@ exports.verifyOtp = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          role: user.role,
-          profilePicture: user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.BASE_URL || 'https://urban-os-backend.onrender.com'}${user.profilePicture}`) : '',
+          profilePicture: user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.BASE_URL || 'https://urban-backend-28dc.onrender.com'}${user.profilePicture}`) : '',
           userType: 'citizen'
         }
       });
@@ -459,6 +459,7 @@ exports.login = async (req, res) => {
           email: admin.email,
           role: admin.role,
           department: admin.department,
+          profilePicture: admin.profilePicture ? (admin.profilePicture.startsWith('http') ? admin.profilePicture : `${process.env.BASE_URL || 'https://urban-backend-28dc.onrender.com'}${admin.profilePicture}`) : '',
           userType: 'admin'
         }
       });
@@ -518,6 +519,7 @@ exports.login = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          profilePicture: user.profilePicture ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${process.env.BASE_URL || 'https://urban-backend-28dc.onrender.com'}${user.profilePicture}`) : '',
           userType: 'citizen'
         }
       });
@@ -670,7 +672,7 @@ exports.updateProfile = async (req, res) => {
 
     if (req.file) {
       // Return FULL URL for frontend persistence
-      const baseUrl = process.env.BASE_URL || 'https://urban-os-backend.onrender.com';
+      const baseUrl = process.env.BASE_URL || 'https://urban-backend-28dc.onrender.com';
       profilePicture = `${baseUrl}/uploads/profiles/${req.file.filename}`;
     }
 
