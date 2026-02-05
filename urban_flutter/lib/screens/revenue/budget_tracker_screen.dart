@@ -27,7 +27,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
   Future<void> _fetchBudgetAnalytics() async {
     final provider = Provider.of<AppProvider>(context, listen: false);
     // Uses the new backend endpoint we just created
-    final url = Uri.parse('${provider.baseUrl}/api/revenue/analytics?fiscalYear=$_fiscalYear');
+    final url = Uri.parse('${ApiService.baseUrl}/analytics/revenue');
     
     try {
       final response = await http.get(
