@@ -6,6 +6,13 @@ const connectDB = require('./config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ✅ STARTUP DIAGNOSTICS
+console.log('🚀 Starting Smart City Backend...');
+console.log('📅 Time:', new Date().toISOString());
+console.log('📂 Directory:', process.cwd());
+console.log('🔑 Port:', PORT);
+console.log('📦 Node version:', process.version);
+
 // ✅ BODY PARSER CONFIGURATION
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
