@@ -31,9 +31,10 @@ if (process.env.SENDGRID_API_KEY) {
     tls: {
       rejectUnauthorized: false
     },
-    connectionTimeout: 60000,
-    greetingTimeout: 60000,
-    socketTimeout: 90000
+    // Shorter timeouts to fail faster on blocked ports
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 45000
   });
 }
 

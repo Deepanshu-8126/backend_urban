@@ -13,6 +13,15 @@ console.log('📂 Directory:', process.cwd());
 console.log('🔑 Port:', PORT);
 console.log('📦 Node version:', process.version);
 
+// ✅ RENDER SPECIFIC DIAGNOSTICS
+if (process.env.RENDER) {
+  console.log('🌐 Environment: Render Cloud');
+  if (!process.env.SENDGRID_API_KEY) {
+    console.warn('⚠️ WARNING: SENDGRID_API_KEY is missing. Gmail SMTP might fail on Render Free Tier due to port blocking.');
+    console.warn('👉 Suggestion: Add SENDGRID_API_KEY to Render Environment Variables for 100% reliable emails.');
+  }
+}
+
 // ✅ BODY PARSER CONFIGURATION
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -219,10 +228,27 @@ loadRoutes('./intelligence/feedbackLoop/routes', '/api/v1/intelligence/feedback'
 loadRoutes('./intelligence/advanced/routes', '/api/v1/intelligence/advanced', 'intelligence-advanced');
 console.log('✅ City Intelligence Layer loaded successfully');
 // ==================== END INTELLIGENCE LAYER ====================
+app.get('/api/v1/auth/email-diagnostic', async (req, res) => {
+  const { testConnection, getEmailStats } = require('./utils/emailService');
+  const result = await testConnection();
+  const stats = getEmailStats();
+  res.json({
+    success: result,
+    stats,
+    env: {
+      hasSendGrid: !!process.env.SENDGRID_API_KEY,
+      hasEmailUser: !!process.env.EMAIL_USER,
+      nodeVersion: process.version,
+      platform: process.platform
+    }
+  });
+});
+
 // ✅ SERVE UPLOADED FILES (Using Absolute Path)
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-console.log('✅ Uploads directory configured:', path.join(__dirname, '../uploads'));
+const uploadPath = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadPath));
+console.log('✅ Uploads directory configured:', uploadPath);
 
 // ✅ GLOBAL ERROR HANDLING (JSON RESPONSE)
 app.use((err, req, res, next) => {
