@@ -61,8 +61,9 @@ router.get('/my', auth.authenticateToken, controller.getMyComplaints);
 router.get('/admin', auth.authenticateToken, auth.adminOnly, controller.getAdminComplaints);
 
 // ✅ STATUS UPDATE ROUTES (Renamed to avoid conflicts)
-router.patch('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateComplaintStatus);
-router.put('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateComplaintStatus);
+// ✅ STATUS UPDATE ROUTES (Now using Notification-Enabled Controller)
+router.patch('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateStatusAndMessage);
+router.put('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateStatusAndMessage);
 
 
 // ✅ ADDITIONAL ADMIN ROUTES

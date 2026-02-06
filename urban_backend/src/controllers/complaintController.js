@@ -754,85 +754,9 @@ exports.getComplaintById = async (req, res) => {
   }
 };
 
-// ✅ UPDATE COMPLAINT STATUS FUNCTION (Fixed)
-exports.updateComplaintStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, adminMessage } = req.body;
-
-    // Validate admin permissions
-    if (!req.user || (req.user.role !== 'admin' && req.user.userType !== 'admin')) {
-      // ✅ Allow temporary bypass if user role is not strictly enforced in development
-      console.warn("⚠️ Admin permission check failed but proceeding for debugging. Role:", req.user ? req.user.role : 'None');
-      // return res.status(403).json({ 
-      //   success: false, 
-      //   error: 'Admin access required' 
-      // });
-    }
-
-    const validStatuses = ['pending', 'working', 'solved', 'fake', 'deleted'];
-
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid status. Valid: pending, working, solved, fake, deleted'
-      });
-    }
-
-    // Find the complaint
-    const complaint = await Complaint.findById(id);
-    if (!complaint) {
-      return res.status(404).json({
-        success: false,
-        error: 'Complaint not found'
-      });
-    }
-
-    // Update complaint based on status
-    const updateData = {
-      status,
-      adminMessage: adminMessage || '',
-      adminResponseAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    // Special handling for fake and deleted
-    if (status === 'fake' || status === 'deleted') {
-      updateData.status = 'deleted';
-      updateData.adminMessage = adminMessage || 'Marked as fake/deleted by admin';
-    }
-
-    // Update the complaint
-    const updatedComplaint = await Complaint.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
-
-    if (!updatedComplaint) {
-      console.error("❌ Update failed: Complaint not found or update returned null");
-      return res.status(500).json({ success: false, error: "Database update failed" });
-    }
-
-    console.log(`✅ Status updated for ${id} to ${status}. Admin msg: ${adminMessage}`);
-
-    // ✅ SEND NOTIFICATION TO USER (Added)
-    await sendStatusUpdateToUser(updatedComplaint);
-
-    res.json({
-      success: true,
-      message: `Complaint status updated to ${status}`,
-      complaint: updatedComplaint
-    });
-
-  } catch (error) {
-    console.error('Update complaint status error:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update complaint status: ' + error.message
-    });
-  }
-};
+// ✅ UPDATE COMPLAINT STATUS FUNCTION (Redirect to new logic if needed, or keep for legacy)
+// preferably use updateStatusAndMessage
+exports.updateComplaintStatus = exports.updateStatusAndMessage;
 
 // ✅ SEND STATUS UPDATE TO USER (Added)
 async function sendStatusUpdateToUser(complaint) {
