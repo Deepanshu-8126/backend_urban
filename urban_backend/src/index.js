@@ -126,17 +126,36 @@ app.use((req, res, next) => {
 });
 
 // ✅ OPERATION LOGGING MIDDLEWARE
+// ✅ OPERATION LOGGING MIDDLEWARE (ENHANCED LIVE TAIL)
 app.use((req, res, next) => {
   const startTime = Date.now();
-  // ✅ SIMPLIFIED LOGGING FOR SMOOTHNESS
-  console.log(`📥 INCOMING: ${req.method} ${req.path}`);
-  // Removed deep body logging for performance
 
+  // 1. Log Incoming Request
+  console.log(`\n📥 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+
+  // 2. Log Body for Debugging (Skip for simple GETs to keep clean)
+  if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
+    console.log('📦 BODY:', JSON.stringify(req.body, null, 2));
+  }
+
+  // 3. Capture Response Details
   const originalSend = res.send;
   res.send = function (data) {
     const endTime = Date.now();
     const duration = endTime - startTime;
-    console.log(`📤 OUTGOING: ${req.method} ${req.path} | ${res.statusCode} | ${duration}ms`);
+
+    // Determine Status Icon
+    let statusIcon = '✅';
+    if (res.statusCode >= 400) statusIcon = '⚠️';
+    if (res.statusCode >= 500) statusIcon = '❌';
+
+    console.log(`${statusIcon} OUTGOING: ${req.method} ${req.path} | Status: ${res.statusCode} | Time: ${duration}ms`);
+
+    // 4. Log Error Details if Status is 500
+    if (res.statusCode >= 500) {
+      console.log('🔥 SERVER ERROR DATA:', data);
+    }
+
     return originalSend.call(this, data);
   };
 
