@@ -576,10 +576,13 @@ exports.updateStatusAndMessage = async (req, res) => {
   try {
     const { id } = req.params;
     let { status, adminMessage } = req.body;
+    console.log(`🔧 UPDATE REQUEST: ID=${id} | Status=${status}`);
+
     status = status.toLowerCase(); // Ensure lowercase
 
     const validStatuses = ['working', 'solved', 'fake', 'deleted'];
     if (!validStatuses.includes(status)) {
+      console.log(`❌ Invalid status attempt: ${status}`);
       return res.status(400).json({
         success: false,
         error: 'Invalid status. Valid: working, solved, fake, deleted'
@@ -605,8 +608,11 @@ exports.updateStatusAndMessage = async (req, res) => {
     );
 
     if (!complaint) {
+      console.log(`❌ Complaint not found for update: ${id}`);
       return res.status(404).json({ success: false, error: 'Complaint not found' });
     }
+
+    console.log(`✅ DB Update Success: ${complaint._id} is now ${complaint.status}`);
 
     // ✅ SEND NOTIFICATION TO USER (Added)
     await sendStatusUpdateToUser(complaint);
