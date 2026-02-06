@@ -662,7 +662,7 @@ exports.getMyComplaints = async (req, res) => {
         ...comp.toObject(),
         // Include admin response info
         hasAdminResponse: !!comp.adminMessage,
-        adminMessage: comp.adminMessage || 'Problem Submitted',
+        adminMessage: comp.adminMessage || '', // ✅ Fix: No default text
         adminResponseAt: comp.adminResponseAt,
         // Include photo info
         hasImage: !!comp.imageUrl,
@@ -905,7 +905,8 @@ exports.getComplaintsByStatus = async (req, res) => {
         type: comp.location.type,
         coordinates: comp.location.coordinates,
         lat: comp.location.coordinates[1],
-        lng: comp.location.coordinates[0]
+        lng: comp.location.coordinates[0],
+        address: comp.location.address || '' // ✅ Fix: Send address
       },
       user: {
         name: comp.userName,
