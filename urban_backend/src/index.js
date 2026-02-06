@@ -162,11 +162,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ DIRECT DEBUG ROUTE (Bypass Everything)
-app.patch('/api/v1/complaints/update-status/:id', (req, res) => {
-  console.log("🔥 DIRECT HIT IN INDEX.JS: ", req.params.id);
-  res.json({ success: true, message: "Direct Hit Works", id: req.params.id });
-});
+// ✅ DIRECT DEBUG ROUTE (REMOVED)
 
 // ✅ LOAD ROUTES FUNCTION
 const loadRoutes = (routePath, basePath, routeName) => {
