@@ -245,8 +245,7 @@ app.get('/api/v1/health', async (req, res) => {
       database: dbStatus,
       emailMode: process.env.SENDGRID_API_KEY ? 'SendGrid' : 'SMTP Fallback',
       uploadsWriteable: fs.existsSync(path.join(__dirname, '../uploads')),
-      platform: process.platform,
-      src_routes: fs.readdirSync(path.join(__dirname, 'routes')).slice(0, 30) // ✅ Verify files on server
+      platform: process.platform
     }
   });
 });
