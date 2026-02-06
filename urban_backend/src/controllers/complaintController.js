@@ -934,8 +934,11 @@ exports.deleteComplaintPermanently = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate admin permissions
-    if (!req.user || (req.user.userType !== 'admin' && req.user.role !== 'admin')) {
+    // Validate admin permissions (Case-insensitive check)
+    const role = (req.user?.role || req.user?.userType || '').toLowerCase();
+
+    if (!role.includes('admin')) {
+      console.log(`⛔ Access Denied for Delete: User Role is '${role}'`);
       return res.status(403).json({
         success: false,
         error: 'Admin access required'
