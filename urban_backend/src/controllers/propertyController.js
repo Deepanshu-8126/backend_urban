@@ -124,7 +124,9 @@ exports.getNearbyProperties = async (req, res) => {
 
     // For now, return all properties enriched with tax data
     // In production, use: Property.find({ location: { $near: ... } })
-    const properties = await Property.find().limit(20);
+    const properties = await Property.find()
+      .sort({ createdAt: -1 })
+      .limit(30);
 
     const enrichedProperties = properties.map(prop => {
       const taxDetails = calculateTaxAmount(prop);
