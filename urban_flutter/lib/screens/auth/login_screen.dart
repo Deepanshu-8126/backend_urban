@@ -100,9 +100,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               Color(0xFFFFFFFF),
               Color(0xFFF0F4FF),
               Color(0xFFE3EEFF),
-              Color(0xFF6C63FF),
+              Color(0xFF0056D2), // Civic Blue
             ],
-            stops: [0.0, 0.3, 0.6, 1.0],
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: SafeArea(
@@ -141,12 +141,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6C63FF).withOpacity(0.2),
+                          color: const Color(0xFF0056D2).withOpacity(0.2),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
                       ],
-                      border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3), width: 2),
+                      border: Border.all(color: const Color(0xFF0056D2).withOpacity(0.3), width: 2),
                     ),
                     child: ClipOval(
                       child: Image.asset(
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6C63FF).withOpacity(0.1),
+                          color: const Color(0xFF0056D2).withOpacity(0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(30),
-                            border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.2)),
+                            border: Border.all(color: const Color(0xFF0056D2).withOpacity(0.2)),
                           ),
                           child: Row(
                             children: [
@@ -231,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             child: Text(
                               "Forgot Password?",
                               style: GoogleFonts.roboto(
-                                color: const Color(0xFF6C63FF),
+                                color: const Color(0xFF0056D2),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -288,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               child: Text(
                                 "Sign Up",
                                 style: GoogleFonts.poppins(
-                                  color: const Color(0xFF6C63FF),
+                                  color: const Color(0xFF0056D2),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -342,14 +342,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF0056D2).withOpacity(0.2)),
       ),
       child: TextField(
         controller: controller,
         obscureText: isPassword && !_isPasswordVisible,
         style: GoogleFonts.roboto(color: const Color(0xFF1E1E1E)),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: const Color(0xFF6C63FF)),
+          prefixIcon: Icon(icon, color: const Color(0xFF0056D2)),
           suffixIcon: isPassword 
             ? IconButton(
                 icon: Icon(

@@ -960,7 +960,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.deepPurple, Colors.purpleAccent],
+                        colors: [Color(0xFF0056D2), Color(0xFF00A896)],
                       ),
                       shape: BoxShape.circle,
                     ),
@@ -972,18 +972,18 @@ class _CityBrainBotState extends State<CityBrainBot> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                     decoration: BoxDecoration(
-                      gradient: isUser
-                          ? const LinearGradient(
-                              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                            )
-                          : null,
-                      color: isUser ? null : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      color: isUser ? const Color(0xFF0056D2) : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(20),
+                        topRight: const Radius.circular(20),
+                        bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(4),
+                        bottomRight: isUser ? const Radius.circular(4) : const Radius.circular(20),
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -1003,7 +1003,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
                     padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                        colors: [Color(0xFF0056D2), Color(0xFF00A896)],
                       ),
                       shape: BoxShape.circle,
                     ),
@@ -1126,135 +1126,92 @@ class _CityBrainBotState extends State<CityBrainBot> {
   }
 
   Widget _buildInputArea() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_selectedImage != null)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey[100],
-            child: Row(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_selectedImage != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                   color: const Color(0xFF0056D2).withOpacity(0.1),
+                   borderRadius: BorderRadius.circular(20),
+                   border: Border.all(color: const Color(0xFF0056D2).withOpacity(0.3))
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.image, size: 16, color: Color(0xFF0056D2)),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text("Image attached: ${_selectedImage!.name}", style: const TextStyle(fontSize: 12, color: Color(0xFF0056D2)), overflow: TextOverflow.ellipsis)),
+                    const SizedBox(width: 8),
+                    InkWell(onTap: () => setState(() => _selectedImage = null), child: const Icon(Icons.close, size: 16, color: Color(0xFF0056D2)))
+                  ],
+                ),
+              ),
+            
+            Row(
               children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: FileImage(File(_selectedImage!.path)),
-                      fit: BoxFit.cover,
-                    ),
-                    border: Border.all(color: Colors.deepPurple),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedImage!.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Text(
-                        "Image attached",
-                        style: TextStyle(color: Colors.green, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () {
-                    setState(() {
-                      _selectedImage = null;
-                    });
+                  icon: Icon(Icons.image_outlined, color: Colors.grey[600]),
+                  onPressed: _pickImage,
+                  tooltip: "Upload Image",
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey[300]!)
+                    ),
+                    child: TextField(
+                      controller: _ctrl,
+                      enabled: !isTyping,
+                      decoration: InputDecoration(
+                        hintText: isTyping ? "AI is thinking..." : "Ask about complaints, tax, etc...",
+                        hintStyle: TextStyle(color: Colors.grey[500]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      ),
+                      onSubmitted: (val) {
+                         if (!isTyping) askAI(val);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onLongPress: _startListening,
+                  onLongPressUp: _stopListening,
+                  onTap: () {
+                     if (_isListening) {
+                       _stopListening();
+                     } else {
+                       askAI(_ctrl.text);
+                     }
                   },
+                  child: Container(
+                     padding: const EdgeInsets.all(12),
+                     decoration: const BoxDecoration(
+                       gradient: LinearGradient(colors: [Color(0xFF0056D2), Color(0xFF00A896)]),
+                       shape: BoxShape.circle,
+                     ),
+                     child: Icon(_isListening ? Icons.mic : Icons.send, color: Colors.white, size: 20),
+                  ),
                 ),
               ],
             ),
-          ),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, -3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.image_outlined,
-                  color: _selectedImage != null ? Colors.green : Colors.deepPurple
-                ),
-                onPressed: () {
-                  if (!isTyping) _pickImage();
-                },
-                tooltip: "Upload Image",
-              ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F7FA),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: TextField(
-                    controller: _ctrl,
-                    decoration: const InputDecoration(
-                      hintText: "Ask in English or Hinglish...",
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    ),
-                    onSubmitted: (text) {
-                      if (!isTyping) askAI(text);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: Icon(
-                  _isListening ? Icons.mic : Icons.mic_outlined,
-                  color: _isListening ? Colors.red : Colors.deepPurple,
-                ),
-                onPressed: _isListening ? _stopListening : _startListening,
-                tooltip: "Voice Input",
-              ),
-              const SizedBox(width: 4),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.deepPurple, Colors.purpleAccent],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Colors.white),
-                  onPressed: () {
-                    if (!isTyping) askAI(_ctrl.text);
-                  },
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

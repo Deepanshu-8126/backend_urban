@@ -44,9 +44,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                 Color(0xFFFFFFFF),
                 Color(0xFFF0F4FF),
                 Color(0xFFE3EEFF),
-                Color(0xFF6C63FF),
+                Color(0xFF0056D2), // Civic Blue
               ],
-              stops: [0.0, 0.3, 0.6, 1.0],
+              stops: [0.0, 0.3, 0.7, 1.0],
             ),
           ),
           child: SafeArea(
@@ -88,7 +88,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                   shape: BoxShape.circle, // Circular Shape
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6C63FF).withOpacity(0.2),
+                      color: const Color(0xFF0056D2).withOpacity(0.2),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -113,7 +113,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                     style: GoogleFonts.poppins(
                       fontSize: 22, 
                       fontWeight: FontWeight.bold, 
-                      color: const Color(0xFF6C63FF),
+                      color: const Color(0xFF0056D2),
                       letterSpacing: 1.0, 
                       height: 1.0
                     )
@@ -144,14 +144,14 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              color: const Color(0xFF0056D2).withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFF0056D2).withOpacity(0.3)),
             ),
             child: Text(
               "🚀 SMART CITY MANAGEMENT PLATFORM",
               style: GoogleFonts.poppins(
-                color: const Color(0xFF6C63FF),
+                color: const Color(0xFF0056D2),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
                 letterSpacing: 1.2,
@@ -174,7 +174,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                   const TextSpan(text: "Chota Kadam, \n"),
                   TextSpan(
                     text: "Badalta Bharat 🇮🇳",
-                    style: GoogleFonts.poppins(color: const Color(0xFF6C63FF)),
+                    style: GoogleFonts.poppins(color: const Color(0xFF0056D2)),
                   ),
                 ],
               ),
@@ -606,7 +606,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF6C63FF)),
+          Icon(icon, size: 18, color: const Color(0xFF0056D2)),
           const SizedBox(width: 8),
           Text(
             label,
@@ -632,7 +632,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C63FF).withOpacity(0.3),
+            color: const Color(0xFF0056D2).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -704,7 +704,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF6C63FF),
+              color: const Color(0xFF0056D2),
             ),
           ),
           const SizedBox(height: 8),
@@ -733,7 +733,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF6C63FF),
+        backgroundColor: const Color(0xFF0056D2),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
