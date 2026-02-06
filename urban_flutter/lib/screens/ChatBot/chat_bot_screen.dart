@@ -683,12 +683,19 @@ class _CityBrainBotState extends State<CityBrainBot> {
     );
   }
 
-  AppBar _buildAppBar() {
     return AppBar(
       elevation: 0,
-      backgroundColor: Colors.deepPurple,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0056D2), Color(0xFF00A896)], // Civic Blue -> Tech Teal
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+      ),
       leading: IconButton(
-        icon: const Icon(Icons.menu),
+        icon: const Icon(Icons.menu, color: Colors.white),
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       title: Row(
@@ -697,17 +704,17 @@ class _CityBrainBotState extends State<CityBrainBot> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.psychology, size: 24),
+            child: const Icon(Icons.psychology, size: 24, color: Colors.white),
           ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("City Brain AI", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("Agentic Intelligence", style: TextStyle(fontSize: 11)),
+                Text("City Brain AI", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text("Agentic Intelligence", style: TextStyle(fontSize: 11, color: Colors.white70)),
               ],
             ),
           ),
@@ -715,7 +722,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.add_circle_outline),
+          icon: const Icon(Icons.add_circle_outline, color: Colors.white),
           onPressed: _startNewChat,
           tooltip: "New Chat",
         ),
