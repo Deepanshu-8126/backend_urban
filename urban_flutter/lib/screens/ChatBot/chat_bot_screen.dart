@@ -1231,37 +1231,39 @@ class _CityBrainBotState extends State<CityBrainBot> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                // 🎙️ MIC BUTTON (Visible when text is empty)
-                if (_ctrl.text.isEmpty)
-                  GestureDetector(
-                    onTap: _isListening ? _stopListening : _startListening,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _isListening ? Colors.redAccent : const Color(0xFF00A896),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          if (_isListening)
-                            BoxShadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 10, spreadRadius: 2)
-                        ],
-                      ),
-                      child: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white, size: 24),
+                const SizedBox(width: 8),
+                
+                // 🎙️ MIC BUTTON (Always visible)
+                GestureDetector(
+                  onTap: _isListening ? _stopListening : _startListening,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _isListening ? Colors.redAccent : const Color(0xFF00A896),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        if (_isListening)
+                          BoxShadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 10, spreadRadius: 2)
+                      ],
                     ),
+                    child: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white, size: 24),
                   ),
+                ),
+                
+                const SizedBox(width: 8),
 
-                // 🚀 SEND BUTTON (Visible when text is NOT empty)
-                if (_ctrl.text.isNotEmpty)
-                  GestureDetector(
-                    onTap: () => askAI(_ctrl.text),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFF0056D2), Color(0xFF00A896)]),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.send, color: Colors.white, size: 20),
+                // 🚀 SEND BUTTON (Always visible)
+                GestureDetector(
+                  onTap: () => askAI(_ctrl.text),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(colors: [Color(0xFF0056D2), Color(0xFF00A896)]),
+                      shape: BoxShape.circle,
                     ),
+                    child: const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
+                ),
               ],
             ),
           ],

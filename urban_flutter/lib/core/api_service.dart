@@ -11,7 +11,7 @@ class ApiService {
   // 🔧 TOGGLE THIS FOR PRODUCTION vs DEVELOPMENT
   // Set to false: Uses local backend (192.168.1.18:3000)
   // Set to true: Uses Render backend (for APK builds)
-  static const bool IS_PRODUCTION = false; // 🔧 DEV MODE ACTIVATED
+  static const bool IS_PRODUCTION = true; // 🔧 PRODUCTION MODE ACTIVATED
   
   static final String baseUrl = _computeBaseUrl(); 
 

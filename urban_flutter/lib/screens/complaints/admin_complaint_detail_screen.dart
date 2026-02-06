@@ -8,8 +8,9 @@ import '../../core/api_service.dart';
 
 class AdminComplaintDetailScreen extends StatefulWidget {
   final Map<String, dynamic> complaint;
+  final VoidCallback? onStatusChanged;
 
-  const AdminComplaintDetailScreen({super.key, required this.complaint});
+  const AdminComplaintDetailScreen({super.key, required this.complaint, this.onStatusChanged});
 
   @override
   State<AdminComplaintDetailScreen> createState() => _AdminComplaintDetailScreenState();
@@ -86,6 +87,7 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
       setState(() => isUpdating = false);
 
       if (success) {
+        widget.onStatusChanged?.call();
         Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Complaint Deleted & Marked as Fake")));
       } else {
@@ -142,10 +144,13 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
     setState(() => isUpdating = false);
 
     if (success) {
-      setState(() => currentStatus = newStatus);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Status updated to $newStatus")),
-      );
+      if (mounted) {
+        setState(() => currentStatus = newStatus);
+        widget.onStatusChanged?.call();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Status updated to $newStatus")),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Failed to update status")),
@@ -262,7 +267,7 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
         ),
         child: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, currentStatus != widget.complaint['status']),
+          onPressed: () => Navigator.pop(context), // ✅ Simple pop, relying on callback
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(
