@@ -492,15 +492,32 @@ exports.getAdminComplaints = async (req, res) => {
 
   try {
     // Filter complaints based on admin's department
+    // Filter complaints based on admin's department
     let filter = { status: { $ne: 'deleted' } };
 
-    if (req.user && req.user.department) {
-      // ✅ LEGACY SUPPORT: Check both 'assignedDept' (AI) and 'department' (Legacy)
-      filter.$or = [
-        { assignedDept: req.user.department },
-        { department: req.user.department },
-        { assignedDept: { $exists: false }, department: { $exists: false } } // Fallback for very old data
-      ];
+    // Check if user is "Head Admin" or "Super Admin" -> Show ALL
+    const role = (req.user?.role || req.user?.userType || '').toLowerCase();
+    const dept = (req.user?.department || '').toLowerCase();
+
+    // If NOT super admin, apply department filter
+    if (!role.includes('head') && !role.includes('super') && dept !== 'all') {
+      if (req.user && req.user.department) {
+        // Create case-insensitive regex for department
+        const deptRegex = new RegExp(`^${req.user.department}$`, 'i');
+
+        filter.$or = [
+          { assignedDept: deptRegex },
+          { department: deptRegex },
+          // If admin is "general", show unassigned too
+          ...(dept === 'general' ? [
+            { assignedDept: { $exists: false } },
+            { department: { $exists: false } },
+            { assignedDept: 'unassigned' }
+          ] : [])
+        ];
+      }
+    } else {
+      console.log('🔓 Super Admin/Head Access: Showing ALL complaints');
     }
 
     console.log('🔍 Admin Query:', JSON.stringify(filter));
