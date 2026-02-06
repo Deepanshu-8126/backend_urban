@@ -36,6 +36,8 @@ class _CityBrainBotState extends State<CityBrainBot> {
   Map<String, dynamic> collectedData = {};
   String _greetingMessage = "";
 
+  bool isVoiceEnabled = false; // Default OFF as requested
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +57,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
   }
 
   Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
+    if (isVoiceEnabled && text.isNotEmpty) {
       await _flutterTts.speak(text);
     }
   }
@@ -742,6 +744,20 @@ class _CityBrainBotState extends State<CityBrainBot> {
       ),
       actions: [
         IconButton(
+          icon: Icon(isVoiceEnabled ? Icons.volume_up : Icons.volume_off, color: Colors.white),
+          onPressed: () {
+            setState(() {
+              isVoiceEnabled = !isVoiceEnabled;
+              if (isVoiceEnabled) {
+                _speak("Voice enabled");
+              } else {
+                _flutterTts.stop();
+              }
+            });
+          },
+          tooltip: isVoiceEnabled ? "Mute Voice" : "Enable Voice",
+        ),
+        IconButton(
           icon: const Icon(Icons.add_circle_outline, color: Colors.white),
           onPressed: _startNewChat,
           tooltip: "New Chat",
@@ -848,8 +864,15 @@ class _CityBrainBotState extends State<CityBrainBot> {
           },
         ),
         onTap: () async {
+          // Fix: Try local first, then backend. Ensure drawer closes.
           await _loadChatFromLocal(chat['sessionId']);
-          
+          if (messages.isEmpty) {
+             // Fallback to backend if local failed or was empty
+             await _loadChatFromBackend(chat['sessionId']);
+          }
+          if (mounted && _scaffoldKey.currentState?.isDrawerOpen == true) {
+             Navigator.pop(context);
+          }
         },
       ),
     );
