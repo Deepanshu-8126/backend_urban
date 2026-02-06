@@ -9,13 +9,15 @@ const calculateTaxAmount = (property) => {
     'C': { residential: 4, commercial: 15, industrial: 10, mixed: 8, hospital: 6, hotel: 12, open_land: 3 }
   };
 
-  const zone = property.zone || 'B';
-  const type = property.propertyType || 'residential';
+  // Validate inputs or use defaults
+  const zone = (property.zone && standardRentMatrix[property.zone]) ? property.zone : 'B';
+  const type = (property.propertyType && standardRentMatrix[zone][property.propertyType]) ? property.propertyType : 'residential';
 
-  const stdRent = standardRentMatrix[zone][type] || standardRentMatrix['B']['residential'];
+  const stdRent = standardRentMatrix[zone][type];
 
   // Rateable Value (RV) = Area * StdRent * 12 months * 0.9 (10% maintenance deduction)
-  const rateableValue = property.area * stdRent * 12 * 0.9;
+  const area = parseFloat(property.area) || 0;
+  const rateableValue = area * stdRent * 12 * 0.9;
 
   // Tax Rate (approx 15% of RV for this municipality)
   const taxRate = 0.15;

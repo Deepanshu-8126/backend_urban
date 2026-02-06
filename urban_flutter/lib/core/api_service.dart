@@ -966,6 +966,8 @@ class ApiService {
           'userId': userId,
           'userEmail': userEmail,
           'userName': userName,
+          'role': prefs.getString('role') ?? 'citizen',
+          'department': prefs.getString('department') ?? 'General',
         }),
       );
 

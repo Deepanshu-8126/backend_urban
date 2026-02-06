@@ -214,7 +214,7 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
         ),
         child: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, currentStatus != widget.complaint['status']),
         ),
       ),
       flexibleSpace: FlexibleSpaceBar(

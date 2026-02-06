@@ -168,13 +168,12 @@ class _CitizenFormState extends State<CitizenForm> {
     } on PlatformException catch (e) {
       if (mounted) {
         setState(() => _isLocating = false);
-
-        _showManualLocationDialog();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLocating = false);
 
+        String errorMsg = e.toString();
         if (errorMsg.contains('timeout') || errorMsg.contains('time')) {
           errorMsg = 'Location request timed out. Please check your GPS and try again.';
         }

@@ -32,14 +32,49 @@ class _CityBrainBotState extends State<CityBrainBot> {
   
   String? currentIntent;
   Map<String, dynamic> collectedData = {};
+  String _greetingMessage = "";
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadGreeting();
       _loadChatsFromLocal(); 
       _loadChatHistoryFromBackend(); 
       _startNewChat();
+    });
+  }
+
+  Future<void> _loadGreeting() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userName = prefs.getString('userName') ?? 'Citizen';
+    final hour = DateTime.now().hour;
+    
+    String greeting;
+    if (hour >= 5 && hour < 12) {
+      greeting = "Good Morning, $userName! ☀️";
+    } else if (hour >= 12 && hour < 17) {
+      greeting = "Good Afternoon, $userName! 🌤️";
+    } else if (hour >= 17 && hour < 21) {
+      greeting = "Good Evening, $userName! 🌇";
+    } else {
+      greeting = "Hello, $userName! 🌙";
+    }
+
+    if (mounted) {
+      setState(() {
+        _greetingMessage = greeting;
+      });
+    }
+  }
+
+  void _startNewChat() {
+    setState(() {
+      currentChatId = DateTime.now().millisecondsSinceEpoch.toString();
+      messages = [];
+      _selectedImage = null;
+      currentIntent = null;
+      collectedData = {};
     });
   }
 
@@ -351,26 +386,65 @@ class _CityBrainBotState extends State<CityBrainBot> {
 
   Future<void> _executeAction(String intent, Map<String, dynamic> data) async {
     switch (intent) {
-      case 'FILE_COMPLAINT':
-        await _handleComplaintAction(data);
+      case 'NAVIGATE_ADMIN':
+        await _handleAdminNavigation(data);
         break;
-      case 'CHECK_AQI':
-        await _handleAQIAction(data);
+      case 'SHOW_ANALYTICS':
+        await _handleAnalyticsAction(data);
         break;
-      case 'CALCULATE_TAX':
-        await _handleTaxAction(data);
-        break;
-      case 'TRIGGER_SOS':
-        await _handleSOSAction(data);
+      case 'DRAFT_NOTIFICATION':
+        await _handleNotificationAction(data);
         break;
       default:
-        
         break;
     }
   }
 
-  Future<void> _handleComplaintAction(Map<String, dynamic> data) async {
+  // 👮‍♂️ ADMIN HANDLERS
+  Future<void> _handleAdminNavigation(Map<String, dynamic> data) async {
+    if (!mounted) return;
     
+    // Simulate loading
+    setState(() => messages.add({ "sender": "bot", "text": "Navigate to ${data['screen']}...", "type": "loading" }));
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => messages.removeLast());
+
+    if (data['screen'] == 'AdminComplaintList') {
+       // Navigate to Admin Complaints
+       Navigator.pushNamed(context, '/admin/complaints'); // Adjust route as needed
+    } else if (data['screen'] == 'MonitorMap') {
+       Navigator.pushNamed(context, '/admin/map');
+    } else {
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Navigation to ${data['screen']} not implemented yet")));
+    }
+  }
+
+  Future<void> _handleAnalyticsAction(Map<String, dynamic> data) async {
+    if (mounted) {
+      setState(() {
+        messages.add({
+          "sender": "bot",
+          "text": "📊 **City Stats (Today)**\n\n🔹 New Complaints: 42\n🔹 Solved: 15\n🔹 Critical: 3\n\nEfficiency: 85%",
+          "type": "analytics_card" // You can create a custom widget for this later
+        });
+      });
+    }
+  }
+
+  Future<void> _handleNotificationAction(Map<String, dynamic> data) async {
+    if (mounted) {
+      setState(() {
+        messages.add({
+          "sender": "bot",
+          "text": "✅ Notification Drafted:\n'${data['title']}'\n\nRedirecting to broadcast screen...",
+        });
+      });
+      // Future: Navigate to notification screen with pre-filled data
+    }
+  }
+
+  // 🧑‍🤝‍🧑 CITIZEN HANDLERS
+  Future<void> _handleComplaintAction(Map<String, dynamic> data) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
       Navigator.push(
@@ -387,7 +461,6 @@ class _CityBrainBotState extends State<CityBrainBot> {
   }
 
   Future<void> _handleAQIAction(Map<String, dynamic> data) async {
-    
     if (mounted) {
       setState(() {
         messages.add({
@@ -397,8 +470,6 @@ class _CityBrainBotState extends State<CityBrainBot> {
         });
       });
     }
-    
-    
     
     await Future.delayed(const Duration(seconds: 1));
     
@@ -440,7 +511,6 @@ class _CityBrainBotState extends State<CityBrainBot> {
   }
 
   Future<void> _handleSOSAction(Map<String, dynamic> data) async {
-    
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -565,6 +635,34 @@ class _CityBrainBotState extends State<CityBrainBot> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
+          // 🌅 GREETING HEADER
+          if (_greetingMessage.isNotEmpty && messages.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                border: Border(bottom: BorderSide(color: Colors.blue.withOpacity(0.1))),
+              ),
+              child: Column(
+                children: [
+                   Text(
+                    _greetingMessage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "How can I help you today?",
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: messages.isEmpty
                 ? _buildWelcomeScreen()

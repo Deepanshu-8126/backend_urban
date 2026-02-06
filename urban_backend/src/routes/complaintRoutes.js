@@ -60,9 +60,9 @@ router.get('/', auth.authenticateToken, controller.getComplaints);
 router.get('/my', auth.authenticateToken, controller.getMyComplaints);
 router.get('/admin', auth.authenticateToken, auth.adminOnly, controller.getAdminComplaints);
 
-// ✅ STATUS UPDATE ROUTES (Renamed to avoid conflicts) - AUTH REMOVED TEMP
-router.patch('/update-status/:id', controller.updateComplaintStatus);
-router.put('/update-status/:id', controller.updateComplaintStatus);
+// ✅ STATUS UPDATE ROUTES (Renamed to avoid conflicts)
+router.patch('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateComplaintStatus);
+router.put('/update-status/:id', auth.authenticateToken, auth.adminOnly, controller.updateComplaintStatus);
 
 
 // ✅ ADDITIONAL ADMIN ROUTES

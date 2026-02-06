@@ -809,6 +809,13 @@ exports.updateComplaintStatus = async (req, res) => {
       { new: true }
     );
 
+    if (!updatedComplaint) {
+      console.error("❌ Update failed: Complaint not found or update returned null");
+      return res.status(500).json({ success: false, error: "Database update failed" });
+    }
+
+    console.log(`✅ Status updated for ${id} to ${status}. Admin msg: ${adminMessage}`);
+
     // ✅ SEND NOTIFICATION TO USER (Added)
     await sendStatusUpdateToUser(updatedComplaint);
 
@@ -822,7 +829,7 @@ exports.updateComplaintStatus = async (req, res) => {
     console.error('Update complaint status error:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Failed to update complaint status'
+      error: 'Failed to update complaint status: ' + error.message
     });
   }
 };

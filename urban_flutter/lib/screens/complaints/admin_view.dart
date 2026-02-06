@@ -268,7 +268,10 @@ class _AdminViewState extends State<AdminView> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AdminComplaintDetailScreen(complaint: item))),
+          onTap: () async {
+            final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminComplaintDetailScreen(complaint: item)));
+            if (result == true) fetchComplaints();
+          },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
