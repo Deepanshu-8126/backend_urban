@@ -489,7 +489,7 @@ exports.getLiveComplaints = async (req, res) => {
 // ✅ OTHER FUNCTIONS (Same as before, just adding safety checks)
 // Get admin complaints (Updated for photo + preserved existing features)
 exports.getAdminComplaints = async (req, res) => {
-  s
+
   try {
     // Filter complaints based on admin's department
     let filter = { status: { $ne: 'deleted' } };
