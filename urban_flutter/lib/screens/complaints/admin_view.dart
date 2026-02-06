@@ -163,6 +163,7 @@ class _AdminViewState extends State<AdminView> {
     );
   }
 
+  Widget _buildAnalyticsDashboard() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),

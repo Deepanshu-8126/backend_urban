@@ -95,8 +95,49 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
   }
 
   Future<void> _updateStatus(String newStatus) async {
+    // Show dialog to get remark
+    TextEditingController remarkController = TextEditingController();
+    
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Mark as ${newStatus.toUpperCase()}?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Add a remark for the user (optional):"),
+            const SizedBox(height: 10),
+            TextField(
+              controller: remarkController,
+              decoration: const InputDecoration(
+                hintText: "e.g., Technician assigned, Leak fixed...",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text("Update Status"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => isUpdating = true);
-    bool success = await ApiService.updateComplaintStatus(widget.complaint['_id'], newStatus);
+    
+    // Pass the remark to the API service
+    bool success = await ApiService.updateComplaintStatus(
+      widget.complaint['_id'], 
+      newStatus, 
+      remark: remarkController.text.trim()
+    );
+    
     if (!mounted) return;
     setState(() => isUpdating = false);
 
@@ -147,53 +188,60 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
     
     final headerImage = images.isNotEmpty ? '${ApiService.baseUrl.replaceAll('/api/v1', '')}${images.first}' : null;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      extendBodyBehindAppBar: true, 
-      body: CustomScrollView( 
-        slivers: [
-          _buildSliverAppBar(headerImage, item),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100), 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   _buildStatusHeader(item),
-                   const SizedBox(height: 24),
-                   _buildSectionTitle("Description"),
-                   const SizedBox(height: 8),
-                   Text(
-                     item['description'] ?? "No description provided.",
-                     style: GoogleFonts.inter(fontSize: 16, color: Colors.blueGrey[800], height: 1.6),
-                   ),
-                   const SizedBox(height: 32),
-                   _buildSectionTitle("Location & Map"),
-                   const SizedBox(height: 12),
-                   _buildLocationCard(item),
-                   const SizedBox(height: 32),
-                   if (_isVideoInitialized && _chewieController != null) ...[
-                      _buildSectionTitle("Video Evidence"),
-                      const SizedBox(height: 12),
-                      _buildVideoPlayer(),
-                      const SizedBox(height: 32),
-                   ],
-                   if (images.length > 1) ...[ 
-                      _buildSectionTitle("Gallery"),
-                      const SizedBox(height: 12),
-                      _buildGallery(images),
-                      const SizedBox(height: 32),
-                   ],
-                   _buildSectionTitle("Reported By"),
-                   const SizedBox(height: 12),
-                   _buildUserCard(userName, userEmail),
-                ],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        Navigator.pop(context, currentStatus != widget.complaint['status']);
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        extendBodyBehindAppBar: true, 
+        body: CustomScrollView( 
+          slivers: [
+            _buildSliverAppBar(headerImage, item),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100), 
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                     _buildStatusHeader(item),
+                     const SizedBox(height: 24),
+                     _buildSectionTitle("Description"),
+                     const SizedBox(height: 8),
+                     Text(
+                       item['description'] ?? "No description provided.",
+                       style: GoogleFonts.inter(fontSize: 16, color: Colors.blueGrey[800], height: 1.6),
+                     ),
+                     const SizedBox(height: 32),
+                     _buildSectionTitle("Location & Map"),
+                     const SizedBox(height: 12),
+                     _buildLocationCard(item),
+                     const SizedBox(height: 32),
+                     if (_isVideoInitialized && _chewieController != null) ...[
+                        _buildSectionTitle("Video Evidence"),
+                        const SizedBox(height: 12),
+                        _buildVideoPlayer(),
+                        const SizedBox(height: 32),
+                     ],
+                     if (images.length > 1) ...[ 
+                        _buildSectionTitle("Gallery"),
+                        const SizedBox(height: 12),
+                        _buildGallery(images),
+                        const SizedBox(height: 32),
+                     ],
+                     _buildSectionTitle("Reported By"),
+                     const SizedBox(height: 12),
+                     _buildUserCard(userName, userEmail),
+                  ],
+                ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
+        bottomNavigationBar: _buildGlassActionDock(),
       ),
-      bottomNavigationBar: _buildGlassActionDock(),
     );
   }
 

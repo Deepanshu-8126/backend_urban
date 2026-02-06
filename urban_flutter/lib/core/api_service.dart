@@ -11,7 +11,7 @@ class ApiService {
   // 🔧 TOGGLE THIS FOR PRODUCTION vs DEVELOPMENT
   // Set to false: Uses local backend (192.168.1.18:3000)
   // Set to true: Uses Render backend (for APK builds)
-  static const bool IS_PRODUCTION = true; // ✅ SET TO TRUE FOR APK BUILD
+  static const bool IS_PRODUCTION = false; // 🔧 DEV MODE ACTIVATED
   
   static final String baseUrl = _computeBaseUrl(); 
 
@@ -445,7 +445,7 @@ class ApiService {
     }
   }
 
-  static Future<bool> updateComplaintStatus(String id, String status) async {
+  static Future<bool> updateComplaintStatus(String id, String status, {String? remark}) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
@@ -456,13 +456,18 @@ class ApiService {
         return false;
       }
 
+      final Map<String, dynamic> body = {'status': status};
+      if (remark != null && remark.isNotEmpty) {
+        body['adminMessage'] = remark;
+      }
+
       final response = await http.patch(
         Uri.parse('$baseUrl/complaints/update-status/$id'), 
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'status': status}),
+        body: jsonEncode(body),
       );
       
       debugPrint("Update Response: ${response.statusCode} - ${response.body}");

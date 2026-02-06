@@ -186,7 +186,7 @@ class _CitizenComplaintDetailScreenState extends State<CitizenComplaintDetailScr
                   const SizedBox(height: 24),
                   
                   
-                  if (adminMessage != null && adminMessage.isNotEmpty) ...[
+                  if (adminMessage != null && adminMessage.isNotEmpty && adminMessage != "Problem Submitted") ...[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -199,7 +199,7 @@ class _CitizenComplaintDetailScreenState extends State<CitizenComplaintDetailScr
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.admin_panel_settings, color: Colors.blue),
+                              const Icon(Icons.support_agent, color: Colors.blue),
                               const SizedBox(width: 8),
                               const Text("Admin Response", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
                               const Spacer(),
@@ -213,7 +213,7 @@ class _CitizenComplaintDetailScreenState extends State<CitizenComplaintDetailScr
                           const SizedBox(height: 8),
                           Text(
                             adminMessage,
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(color: Colors.black87, height: 1.5),
                           ),
                         ],
                       ),
@@ -233,37 +233,51 @@ class _CitizenComplaintDetailScreenState extends State<CitizenComplaintDetailScr
                   
                   const Text("Location", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () async {
-                      final lat = item['location']?['coordinates']?[1] ?? item['location']?['lat'];
-                      final lng = item['location']?['coordinates']?[0] ?? item['location']?['lng'];
-                      if (lat != null && lng != null) {
-                        final url = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
-                        launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
+                  Builder(
+                    builder: (context) {
+                       String address = "Unknown Location";
+                       dynamic loc = item['location'];
+                       if (loc != null) {
+                         if (loc is Map) {
+                           address = loc['address'] ?? "Unknown Location";
+                         } else if (loc is String) {
+                           address = loc;
+                         }
+                       }
+                       
+                       return InkWell(
+                        onTap: () async {
+                          final lat = item['location']?['coordinates']?[1] ?? item['location']?['lat'];
+                          final lng = item['location']?['coordinates']?[0] ?? item['location']?['lng'];
+                          if (lat != null && lng != null) {
+                            final url = Uri.parse("https://www.google.com/maps/search/?api=1&query=$lat,$lng");
+                            launchUrl(url, mode: LaunchMode.externalApplication);
+                          }
+                        },
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on, color: Colors.red),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              item['location']?['address'] ?? "Unknown Location",
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey[200]!),
                           ),
-                          const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
-                        ],
-                      ),
-                    ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.location_on, color: Colors.red),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  address,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                   ),
                 ],
               ),
