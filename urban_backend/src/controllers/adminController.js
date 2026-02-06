@@ -85,7 +85,7 @@ exports.getDepartmentComplaints = async (req, res) => {
     }
 
     const complaints = await Complaint.find({ department })
-      .sort({ priorityScore: -1, createdAt: -1 });
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
