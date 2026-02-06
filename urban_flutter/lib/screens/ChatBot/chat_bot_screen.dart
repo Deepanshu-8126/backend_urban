@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/api_service.dart';
@@ -14,6 +15,7 @@ class CityBrainBot extends StatefulWidget {
 }
 
 class _CityBrainBotState extends State<CityBrainBot> {
+  final FlutterTts _flutterTts = FlutterTts();
   final TextEditingController _ctrl = TextEditingController();
   List<Map<String, dynamic>> messages = [];
   List<Map<String, dynamic>> chatHistory = [];
@@ -42,7 +44,20 @@ class _CityBrainBotState extends State<CityBrainBot> {
       _loadChatsFromLocal(); 
       _loadChatHistoryFromBackend(); 
       _startNewChat();
+      _initTts();
     });
+  }
+
+  Future<void> _initTts() async {
+    await _flutterTts.setLanguage("en-IN");
+    await _flutterTts.setPitch(1.0);
+    await _flutterTts.setSpeechRate(0.5);
+  }
+
+  Future<void> _speak(String text) async {
+    if (text.isNotEmpty) {
+      await _flutterTts.speak(text);
+    }
   }
 
   Future<void> _loadGreeting() async {
@@ -342,6 +357,8 @@ class _CityBrainBotState extends State<CityBrainBot> {
             "intent": intent,
             "timestamp": DateTime.now().toIso8601String(),
           });
+          
+          _speak(answer); // ✅ Speak the answer
         });
 
         
