@@ -26,6 +26,8 @@ class _AdminViewState extends State<AdminView> {
   
   int _total = 0;
   int _pending = 0;
+  int _working = 0;
+  int _solved = 0;
   int _critical = 0;
 
   @override
@@ -72,6 +74,8 @@ class _AdminViewState extends State<AdminView> {
   void _calculateStats() {
     _total = _allComplaints.length;
     _pending = _allComplaints.where((c) => c['status'] == 'pending').length;
+    _working = _allComplaints.where((c) => c['status'] == 'working').length;
+    _solved = _allComplaints.where((c) => c['status'] == 'solved').length;
     _critical = _allComplaints.where((c) => (c['priorityScore'] ?? 0) > 8).length;
   }
 
@@ -159,7 +163,6 @@ class _AdminViewState extends State<AdminView> {
     );
   }
 
-  Widget _buildAnalyticsDashboard() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -168,14 +171,27 @@ class _AdminViewState extends State<AdminView> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          Expanded(child: _buildStatCard("Total", "$_total", Colors.white)),
-          Container(width: 1, height: 40, color: Colors.white24),
-          Expanded(child: _buildStatCard("Pending", "$_pending", Colors.orangeAccent)),
-          Container(width: 1, height: 40, color: Colors.white24),
-          Expanded(child: _buildStatCard("Urgent", "$_critical", Colors.redAccent)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(child: _buildStatCard("Total", "$_total", Colors.white)),
+              Container(width: 1, height: 40, color: Colors.white24),
+              Expanded(child: _buildStatCard("Pending", "$_pending", Colors.orangeAccent)),
+              Container(width: 1, height: 40, color: Colors.white24),
+              Expanded(child: _buildStatCard("Working", "$_working", Colors.blueAccent)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+             children: [
+               Expanded(child: _buildStatCard("Solved", "$_solved", Colors.greenAccent)),
+               Container(width: 1, height: 40, color: Colors.white24),
+               Expanded(child: _buildStatCard("Urgent", "$_critical", Colors.redAccent)),
+             ],
+          ),
         ],
       ),
     );
@@ -183,7 +199,6 @@ class _AdminViewState extends State<AdminView> {
 
   Widget _buildStatCard(String label, String value, Color color) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(value, style: GoogleFonts.montserrat(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
         Text(label, style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
