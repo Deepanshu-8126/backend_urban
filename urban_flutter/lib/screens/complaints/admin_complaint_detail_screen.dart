@@ -8,7 +8,7 @@ import '../../core/api_service.dart';
 
 class AdminComplaintDetailScreen extends StatefulWidget {
   final Map<String, dynamic> complaint;
-  final VoidCallback? onStatusChanged;
+  final Function(String, String)? onStatusChanged;
 
   const AdminComplaintDetailScreen({super.key, required this.complaint, this.onStatusChanged});
 
@@ -87,7 +87,7 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
       setState(() => isUpdating = false);
 
       if (success) {
-        widget.onStatusChanged?.call();
+        widget.onStatusChanged?.call(widget.complaint['_id'], 'fake'); // ✅ Pass ID & Status
         Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Complaint Deleted & Marked as Fake")));
       } else {
@@ -146,7 +146,7 @@ class _AdminComplaintDetailScreenState extends State<AdminComplaintDetailScreen>
     if (success) {
       if (mounted) {
         setState(() => currentStatus = newStatus);
-        widget.onStatusChanged?.call();
+        widget.onStatusChanged?.call(widget.complaint['_id'], newStatus); // ✅ Pass ID & Status
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Status updated to $newStatus")),
         );

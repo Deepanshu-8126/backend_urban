@@ -94,6 +94,17 @@ class _AdminViewState extends State<AdminView> {
     });
   }
 
+  void _handleStatusUpdate(String id, String newStatus) {
+    setState(() {
+      final index = _allComplaints.indexWhere((c) => c['_id'] == id);
+      if (index != -1) {
+        _allComplaints[index]['status'] = newStatus;
+        _calculateStats();
+        _filterComplaints();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -287,7 +298,7 @@ class _AdminViewState extends State<AdminView> {
           onTap: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => AdminComplaintDetailScreen(
               complaint: item,
-              onStatusChanged: fetchComplaints, // ✅ Pass callback for live refresh
+              onStatusChanged: (id, newStatus) => _handleStatusUpdate(id, newStatus), // ✅ Optimistic Local Update
             )));
           },
           child: Padding(
