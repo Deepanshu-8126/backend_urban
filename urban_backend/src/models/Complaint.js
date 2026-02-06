@@ -8,30 +8,30 @@ const complaintSchema = new mongoose.Schema({
   images: { type: [String], default: [] },        // ✅ Multiple images support
   audioUrl: { type: String, default: '' },
   videoUrl: { type: String, default: '' },
-  
+
   // Location
   location: {
     type: { type: String, default: 'Point' },
     coordinates: { type: [Number], required: true }, // [longitude, latitude]
     address: { type: String, default: '' } // NEW FIELD for human-readable address
   },
-  
+
   // User Info
   userId: { type: String, required: true },
   userName: { type: String, default: '' },
   userContact: { type: String, default: '' },
-  
+
   // Status & Tracking
-  status: { 
-    type: String, 
-    enum: ['pending', 'working', 'solved', 'fake', 'deleted'], 
-    default: 'pending' 
+  status: {
+    type: String,
+    enum: ['pending', 'working', 'solved', 'fake', 'deleted'],
+    default: 'pending'
   },
-  
+
   // Admin Communication (NEW)
   adminMessage: { type: String, default: '' },  // NEW FIELD
   adminResponseAt: { type: Date, default: null }, // NEW FIELD
-  
+
   // AI & Categorization
   category: { type: String, default: 'other' },
   subType: { type: String, default: '' }, // NEW FIELD
@@ -41,18 +41,18 @@ const complaintSchema = new mongoose.Schema({
   complaintCount: { type: Number, default: 1 },
   aiProcessed: { type: Boolean, default: false },
   assignedOfficer: { type: String, default: '' },
-  
+
   // Validation Status
-  validationStatus: { 
-    type: String, 
-    enum: ['valid', 'mismatch', 'uncertain'], 
-    default: 'uncertain' 
+  validationStatus: {
+    type: String,
+    enum: ['valid', 'mismatch', 'uncertain'],
+    default: 'uncertain'
   }, // NEW FIELD
-  
+
   // Timestamps
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
-});
+}, { collection: 'complaints' }); // ✅ Force standard collection name
 
 // Add indexes
 complaintSchema.index({ "location": "2dsphere" });

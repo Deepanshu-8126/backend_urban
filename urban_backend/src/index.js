@@ -216,7 +216,7 @@ loadRoutes('./routes/trafficRoutes', '/api/v1/traffic', 'traffic');
 loadRoutes('./routes/utilitiesRoutes', '/api/v1/utilities', 'utilities');
 loadRoutes('./routes/citizenRoutes', '/api/v1/citizen', 'citizen');
 loadRoutes('./routes/officerRoutes', '/api/v1/officers', 'officer');
-loadRoutes('./routes/newComplaintRoutes', '/api/v1/complaints-v2', 'complaint-v2');
+// loadRoutes('./routes/newComplaintRoutes', '/api/v1/complaints-v2', 'complaint-v2'); // ❌ REMOVED: LEGACY V2 ROUTE
 loadRoutes('./routes/aiRoutes', '/api/v1/ai', 'ai');
 loadRoutes('./routes/cityMonitorRoutes', '/api/v1/city', 'city-monitor');
 loadRoutes('./routes/analyticsRoutes', '/api/v1/analytics', 'analytics');

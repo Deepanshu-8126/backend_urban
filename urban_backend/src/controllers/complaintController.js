@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios'); // Import Axios
-const Complaint = require('../models/ComplaintV2'); // ✅ Switched to V2 Schema
+const Complaint = require('../models/Complaint'); // ✅ Switched to Standard Schema
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const { sendComplaintUpdate, sendStatusUpdate } = require('../utils/emailService');
@@ -238,6 +238,7 @@ exports.submitComplaint = async (req, res) => {
       validationStatus: (aiValidation && aiValidation.isMismatch) ? 'mismatch' : 'valid' // ✅ Save Validation Status
     });
 
+    console.log('📝 Saving new complaint to collection:', Complaint.collection.name); // DEBUG
     await complaint.save();
 
     // ✅ SEND NOTIFICATION TO ADMINS (Targeted by Department)
