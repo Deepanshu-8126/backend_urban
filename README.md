@@ -59,6 +59,7 @@ Urban OS solves the **"Disconnected City"** problem. Currently, citizens complai
 *   **Sub-Second Latency:** Real-time SOS tracking updates.
 *   **Hybrid AI Model:** Uses Rule-based checks for speed + Gen-AI for complexity.
 *   **Modular Scalability:** Can add a "Traffic Module" without touching the "Water Module" code.
+*   **Smart Complaint Validation:** Automatic detection of mismatches between Complaint Category and Description (e.g., User selects "Water" but describes "broken wire"). System warns user before submission.
 
 ---
 

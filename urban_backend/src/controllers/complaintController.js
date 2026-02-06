@@ -489,15 +489,25 @@ exports.getLiveComplaints = async (req, res) => {
 // ✅ OTHER FUNCTIONS (Same as before, just adding safety checks)
 // Get admin complaints (Updated for photo + preserved existing features)
 exports.getAdminComplaints = async (req, res) => {
+  s
   try {
-    // Get complaints based on admin's department
+    // Filter complaints based on admin's department
     let filter = { status: { $ne: 'deleted' } };
+
     if (req.user && req.user.department) {
-      filter.assignedDept = req.user.department; // AI routing
+      // ✅ LEGACY SUPPORT: Check both 'assignedDept' (AI) and 'department' (Legacy)
+      filter.$or = [
+        { assignedDept: req.user.department },
+        { department: req.user.department },
+        { assignedDept: { $exists: false }, department: { $exists: false } } // Fallback for very old data
+      ];
     }
 
+    console.log('🔍 Admin Query:', JSON.stringify(filter));
     const complaints = await Complaint.find(filter)
       .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${complaints.length} complaints for admin`);
 
     const formattedComplaints = await Promise.all(complaints.map(async (comp) => {
       // ✅ GET USER DETAILS FROM USER COLLECTION
@@ -625,12 +635,20 @@ exports.updateStatusAndMessage = async (req, res) => {
 exports.getMyComplaints = async (req, res) => {
   try {
     const userId = req.user?.id;
+    const userEmail = req.user?.email; // ✅ Get email from token
+
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
 
-    const complaints = await Complaint.find({ userId, status: { $ne: 'deleted' } })
+    console.log(`🔍 User ${userId} fetching complaints...`);
+    const filter = { userId, status: { $ne: 'deleted' } };
+    console.log('🔍 User Query:', JSON.stringify(filter));
+
+    const complaints = await Complaint.find(filter)
       .sort({ createdAt: -1 });
+
+    console.log(`✅ Found ${complaints.length} complaints for user ${userId}`);
 
     return res.json({
       success: true,
