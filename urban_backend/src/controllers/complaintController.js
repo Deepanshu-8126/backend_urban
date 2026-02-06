@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios'); // Import Axios
-const Complaint = require('../models/Complaint');
+const Complaint = require('../models/ComplaintV2'); // ✅ Switched to V2 Schema
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const { sendComplaintUpdate, sendStatusUpdate } = require('../utils/emailService');
@@ -565,7 +565,8 @@ exports.getAdminComplaints = async (req, res) => {
 exports.updateStatusAndMessage = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, adminMessage } = req.body;
+    let { status, adminMessage } = req.body;
+    status = status.toLowerCase(); // Ensure lowercase
 
     const validStatuses = ['working', 'solved', 'fake', 'deleted'];
     if (!validStatuses.includes(status)) {

@@ -47,7 +47,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
 
   Future<void> _loadGreeting() async {
     final prefs = await SharedPreferences.getInstance();
-    final userName = prefs.getString('userName') ?? 'Citizen';
+    final userName = prefs.getString('name') ?? 'Citizen';
     final hour = DateTime.now().hour;
     
     String greeting;
@@ -135,16 +135,6 @@ class _CityBrainBotState extends State<CityBrainBot> {
     } catch (e) {
       debugPrint('❌ Error saving chat: $e');
     }
-  }
-
-  void _startNewChat() {
-    setState(() {
-      currentChatId = DateTime.now().millisecondsSinceEpoch.toString();
-      messages = [];
-      _selectedImage = null;
-      currentIntent = null;
-      collectedData = {};
-    });
   }
 
   Future<void> _loadChatFromBackend(String sessionId) async {
@@ -394,6 +384,18 @@ class _CityBrainBotState extends State<CityBrainBot> {
         break;
       case 'DRAFT_NOTIFICATION':
         await _handleNotificationAction(data);
+        break;
+      case 'FILE_COMPLAINT':
+        await _handleComplaintAction(data);
+        break;
+      case 'CHECK_AQI':
+        await _handleAQIAction(data);
+        break;
+      case 'CALCULATE_TAX':
+        await _handleTaxAction(data);
+        break;
+      case 'TRIGGER_SOS':
+        await _handleSOSAction(data);
         break;
       default:
         break;
@@ -683,6 +685,7 @@ class _CityBrainBotState extends State<CityBrainBot> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
       elevation: 0,
       flexibleSpace: Container(
@@ -1188,25 +1191,37 @@ class _CityBrainBotState extends State<CityBrainBot> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onLongPress: _startListening,
-                  onLongPressUp: _stopListening,
-                  onTap: () {
-                     if (_isListening) {
-                       _stopListening();
-                     } else {
-                       askAI(_ctrl.text);
-                     }
-                  },
-                  child: Container(
-                     padding: const EdgeInsets.all(12),
-                     decoration: const BoxDecoration(
-                       gradient: LinearGradient(colors: [Color(0xFF0056D2), Color(0xFF00A896)]),
-                       shape: BoxShape.circle,
-                     ),
-                     child: Icon(_isListening ? Icons.mic : Icons.send, color: Colors.white, size: 20),
+                // 🎙️ MIC BUTTON (Visible when text is empty)
+                if (_ctrl.text.isEmpty)
+                  GestureDetector(
+                    onTap: _isListening ? _stopListening : _startListening,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _isListening ? Colors.redAccent : const Color(0xFF00A896),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          if (_isListening)
+                            BoxShadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 10, spreadRadius: 2)
+                        ],
+                      ),
+                      child: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white, size: 24),
+                    ),
                   ),
-                ),
+
+                // 🚀 SEND BUTTON (Visible when text is NOT empty)
+                if (_ctrl.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: () => askAI(_ctrl.text),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(colors: [Color(0xFF0056D2), Color(0xFF00A896)]),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.send, color: Colors.white, size: 20),
+                    ),
+                  ),
               ],
             ),
           ],

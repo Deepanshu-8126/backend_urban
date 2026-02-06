@@ -217,13 +217,12 @@ async function validateComplaintText(complaintText, userSelectedCategory, compla
           Available categories:
           - Water
           - Electricity
-          - Road
+          - Roads
           - Garbage
           - Street Light
           - Sewerage
           - Traffic
-          - Property
-          - Environment
+          - Crime
           - Other
           
           Return ONLY a valid JSON object in the following format:
@@ -430,10 +429,10 @@ AGENTIC CAPABILITIES:
    - **REQUIRED DATA**:
      - title: Generate a professional 4-6 word summary (e.g., "Severe Pothole on Main St").
      - description: The full user message + any inferred details.
-     - category: Auto-classify (Water/Road/Electricity/Garbage/Sewerage/Traffic/Property/Environment/Street Light/Other).
+     - category: Auto-classify (Water/Roads/Electricity/Garbage/Sewerage/Traffic/Crime/Street Light/Other).
      - location: Extract specific location if mentioned.
    - **IF MISSING**: Ask for the missing field (usually location).
-   - **IF READY**: Set readyToExecute: true.
+   - **IF READY**: Set readyToExecute: true. (CRITICAL: ALWAYS set this to true if you have extracted a Title and Description).
    
 2. **CHECK_AQI**: Check air quality
    - Ask for location

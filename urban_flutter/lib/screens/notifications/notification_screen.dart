@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_provider.dart';
+import '../../core/socket_service.dart';
 import 'dart:async';
 
 class NotificationScreen extends StatefulWidget {
