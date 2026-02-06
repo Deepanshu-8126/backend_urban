@@ -116,3 +116,70 @@ exports.calculatePropertyTax = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// Get Nearby Properties (Geospatial or List)
+exports.getNearbyProperties = async (req, res) => {
+  try {
+    const { lat, long, radius } = req.query;
+
+    // For now, return all properties enriched with tax data
+    // In production, use: Property.find({ location: { $near: ... } })
+    const properties = await Property.find().limit(20);
+
+    const enrichedProperties = properties.map(prop => {
+      const taxDetails = calculateTaxAmount(prop);
+      return {
+        ...prop._doc,
+        estimatedTax: taxDetails.annualTax,
+        rateableValue: taxDetails.rateableValue,
+        taxStatus: prop.taxDue > 0 ? 'DUE' : 'PAID'
+      };
+    });
+
+    res.json({
+      success: true,
+      data: enrichedProperties
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// Get Revenue Statistics
+exports.getRevenueStats = async (req, res) => {
+  try {
+    const properties = await Property.find();
+
+    let totalTaxCollected = 0;
+    let totalExpectedTax = 0;
+    let defaulters = 0;
+    let paidCount = 0;
+
+    properties.forEach(prop => {
+      const taxDetails = calculateTaxAmount(prop);
+      totalExpectedTax += taxDetails.annualTax;
+
+      if (prop.taxPaid) {
+        totalTaxCollected += taxDetails.annualTax; // Assuming full payment
+        paidCount++;
+      } else {
+        defaulters++;
+      }
+    });
+
+    const collectionRate = properties.length > 0 ? ((paidCount / properties.length) * 100).toFixed(1) : 0;
+
+    res.json({
+      success: true,
+      stats: {
+        totalTaxCollected,
+        totalExpectedTax,
+        defaulters,
+        collectionRate,
+        totalProperties: properties.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
