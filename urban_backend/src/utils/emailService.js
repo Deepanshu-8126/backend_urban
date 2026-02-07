@@ -7,7 +7,7 @@ const emailUser = process.env.EMAIL_USER;
 const emailPass = process.env.EMAIL_PASS;
 const sendGridKey = process.env.SENDGRID_API_KEY;
 const brevoApiKey = process.env.BREVO_API_KEY;
-const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmail.com';
+const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'dkx01622@gmail.com';
 const brevoSenderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
 if (process.env.BREVO_API_KEY) {
@@ -657,14 +657,14 @@ class EmailService {
       html,
       // Removed custom X-Entity-Ref-ID to look more like a standard personal email
       // Added Reply-To to encourage engagement validation
-      replyTo: 'deepanshukapri4@gmail.com'
+      replyTo: 'dkx01622@gmail.com'
     };
   }
 
   async sendEmail(mailOptions) {
     try {
       const apiKey = process.env.BREVO_API_KEY;
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmail.com';
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'dkx01622@gmail.com';
       const senderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
       // 1. Try Brevo API first (Highly recommended for Render Free Tier)
@@ -735,7 +735,7 @@ class EmailService {
       const mailOptions = {
         to: email,
         from: {
-          email: 'deepanshukapri4@gmail.com',
+          email: 'dkx01622@gmail.com',
           name: 'Smart City Team' // Professional Name
         },
         subject: `Verification Code: ${otp}`, // Clean subject
@@ -744,7 +744,7 @@ class EmailService {
         headers: {
           'X-Entity-Ref-ID': `otp-${Date.now()}`
         },
-        replyTo: 'deepanshukapri4@gmail.com'
+        replyTo: 'dkx01622@gmail.com'
       };
 
       return await this.sendEmail(mailOptions);
