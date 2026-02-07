@@ -2,16 +2,16 @@ class ComplaintAnalyzer {
   constructor() {
     this.keywords = {
       water: {
-        primary: ['water', 'jal', 'paani', 'पानी', 'जल', 'supply', 'supply'],
-        secondary: ['pipe', 'tap', 'tank', 'bore', 'well', 'leakage', 'leaking', 'tanker', 'connection', 'pressure', 'flow'],
-        regional: ['jal', 'paani', 'pani', 'jal ki samasya', 'पानी की समस्या', 'जल समस्या'],
-        synonyms: ['hydro', 'aquatic', 'liquid', 'fluid', 'supply', 'distribution']
+        primary: ['water', 'jal', 'paani', 'पानी', 'जल', 'water-supply'],
+        secondary: ['pipe', 'tap', 'tank', 'bore', 'well', 'leakage', 'leaking', 'tanker', 'connection', 'pressure', 'flow', 'pipeline'],
+        regional: ['jal samasya', 'paani ki samasya', 'पानी की समस्या', 'नल', 'जल आपूर्ति'],
+        synonyms: ['hydro', 'aquatic', 'liquid', 'fluid', 'water-distribution']
       },
       electricity: {
-        primary: ['electricity', 'bijli', 'power', 'current', 'बिजली', 'विद्युत'],
-        secondary: ['light', 'bulb', 'switch', 'fuse', 'wire', 'outage', 'voltage', 'transformer', 'pole', 'meter'],
-        regional: ['bijli ki samasya', 'बिजली की समस्या', 'light nahi', 'लाइट नहीं'],
-        synonyms: ['energy', 'electrical', 'power', 'voltage', 'current', 'supply']
+        primary: ['electricity', 'bijli', 'power', 'current', 'बिजली', 'विद्युत', 'light'],
+        secondary: ['bulb', 'switch', 'fuse', 'wire', 'outage', 'voltage', 'transformer', 'pole', 'meter', 'mains', 'cable', 'short-circuit'],
+        regional: ['bijli ki samasya', 'बिजली की समस्या', 'light nahi', 'लाइट नहीं', 'कट', 'पावर कट'],
+        synonyms: ['energy', 'electrical', 'power-supply', 'voltage', 'current', 'voltage-fluctuation']
       },
       roads: {
         primary: ['road', 'sadak', 'street', 'path', 'सड़क', 'सड़कें', 'सडक'],
@@ -72,18 +72,20 @@ class ComplaintAnalyzer {
 
     this.contextualPatterns = {
       water: [
-        /no.*water/i,
         /water.*not.*coming/i,
-        /supply.*interrupted/i,
-        /pipe.*broken/i,
+        /paani.*nhi/i,
+        /jal.*aapurti/i,
+        /supply.*water/i,
+        /broken.*pipe/i,
         /tank.*empty/i
       ],
       electricity: [
-        /no.*light/i,
         /power.*cut/i,
         /electricity.*not.*coming/i,
-        /light.*off/i,
-        /power.*failure/i
+        /bijli.*cut/i,
+        /no.*electricity/i,
+        /voltage.*fluctuation/i,
+        /wire.*broken/i
       ],
       roads: [
         /road.*bad/i,
@@ -109,7 +111,7 @@ class ComplaintAnalyzer {
     };
 
     this.negationWords = [
-      'not', 'no', 'none', 'without', 'lack', 'absence', 
+      'not', 'no', 'none', 'without', 'lack', 'absence',
       'nhi', 'nahi', 'नहीं', 'na', 'न', 'without'
     ];
 
@@ -160,12 +162,12 @@ class ComplaintAnalyzer {
       const text = this.preprocessText(title, description);
       const analysisResults = this.analyzeText(text);
       const finalResult = this.generateFinalResult(analysisResults);
-      
+
       console.log('🤖 AI Analysis Complete:', {
         input: { title, description },
         result: finalResult
       });
-      
+
       return finalResult;
     } catch (error) {
       console.error('❌ AI Analysis Error:', error.message);
@@ -175,16 +177,16 @@ class ComplaintAnalyzer {
 
   preprocessText(title, description) {
     const combinedText = (title + ' ' + description).toLowerCase();
-    
+
     // Remove special characters and normalize
     let cleanedText = combinedText
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    
+
     // Handle negations
     cleanedText = this.handleNegations(cleanedText);
-    
+
     return cleanedText;
   }
 
@@ -196,7 +198,7 @@ class ComplaintAnalyzer {
         return `no_${word}`;
       });
     });
-    
+
     return text;
   }
 
@@ -208,17 +210,17 @@ class ComplaintAnalyzer {
     for (const [dept, keywords] of Object.entries(this.keywords)) {
       const score = this.calculateDepartmentScore(dept, text, keywords);
       scores[dept] = score;
-      
+
       const deptMatches = this.findMatches(dept, text, keywords);
       matches[dept] = deptMatches;
     }
 
     // Contextual pattern matching
     const contextualScores = this.applyContextualPatterns(text);
-    
+
     // Combine scores
     const combinedScores = this.combineScores(scores, contextualScores);
-    
+
     return {
       scores: combinedScores,
       matches: matches,
@@ -266,12 +268,12 @@ class ComplaintAnalyzer {
     keywords.forEach(keyword => {
       const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
       const found = text.match(regex);
-      
+
       if (found) {
         const count = found.length;
         const score = count * weight;
         totalScore += score;
-        
+
         matches.push({
           keyword: keyword,
           count: count,
@@ -294,13 +296,13 @@ class ComplaintAnalyzer {
 
   findMatches(department, text, keywords) {
     const matches = [];
-    
+
     for (const [type, words] of Object.entries(keywords)) {
       words.forEach(word => {
         if (text.includes(word)) {
           const regex = new RegExp(`\\b${word}\\b`, 'gi');
           const occurrences = [...text.matchAll(regex)];
-          
+
           occurrences.forEach(match => {
             matches.push({
               word: word,
@@ -311,60 +313,60 @@ class ComplaintAnalyzer {
         }
       });
     }
-    
+
     return matches;
   }
 
   applyContextualPatterns(text) {
     const scores = {};
-    
+
     for (const [dept, patterns] of Object.entries(this.contextualPatterns)) {
       let deptScore = 0;
-      
+
       patterns.forEach(pattern => {
         const matches = text.match(pattern);
         if (matches) {
           deptScore += matches.length * this.categoryWeights.contextual_match;
         }
       });
-      
+
       scores[dept] = deptScore;
     }
-    
+
     return scores;
   }
 
   combineScores(baseScores, contextualScores) {
     const combined = {};
-    
+
     for (const [dept, baseScore] of Object.entries(baseScores)) {
       const contextualScore = contextualScores[dept] || 0;
       combined[dept] = baseScore.score + contextualScore;
     }
-    
+
     return combined;
   }
 
   generateFinalResult(analysisResults) {
     // Find the highest scoring department
     const sortedDepartments = Object.entries(analysisResults.scores)
-      .sort(([,a], [,b]) => b - a);
-    
+      .sort(([, a], [, b]) => b - a);
+
     const [bestDept, bestScore] = sortedDepartments[0];
-    
+
     // Calculate confidence based on score distribution
     const totalScore = Object.values(analysisResults.scores).reduce((sum, score) => sum + score, 0);
     const confidence = totalScore > 0 ? (bestScore / totalScore) : 0.1;
-    
+
     // Apply intensity modifiers
     const intensity = this.calculateIntensity(analysisResults.text);
-    
+
     // Determine priority
     const priority = this.calculatePriority(bestDept, analysisResults.text, intensity);
-    
+
     // Get department mapping
     const deptInfo = this.departmentMapping[bestDept] || this.departmentMapping.infrastructure;
-    
+
     return {
       department: deptInfo.department,
       assignedDept: deptInfo.assignedDept,
@@ -407,7 +409,7 @@ class ComplaintAnalyzer {
 
   calculatePriority(category, text, intensity) {
     let basePriority = this.departmentMapping[category]?.priority || 1;
-    
+
     // Check for emergency keywords
     for (const [level, words] of Object.entries(this.priorityScoring)) {
       for (const word of words) {
@@ -489,7 +491,7 @@ class ComplaintAnalyzer {
   static getTrendingCategories(recentComplaints, days = 7) {
     const categoryCounts = {};
     const now = Date.now();
-    
+
     recentComplaints.forEach(complaint => {
       const daysDiff = (now - new Date(complaint.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysDiff <= days) {
@@ -497,9 +499,9 @@ class ComplaintAnalyzer {
         categoryCounts[analysis.category] = (categoryCounts[analysis.category] || 0) + 1;
       }
     });
-    
+
     return Object.entries(categoryCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .map(([category, count]) => ({ category, count }));
   }
 }

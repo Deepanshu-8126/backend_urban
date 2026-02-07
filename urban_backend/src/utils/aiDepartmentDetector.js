@@ -11,7 +11,7 @@ class AdvancedDepartmentDetector {
     // but actual calls will fail if key is not set in .env
     this.groq = new Groq({ apiKey: process.env.GROQ_API_KEY || 'dummy_key' });
     this.languageDetector = new LanguageDetect();
-    
+
     // Comprehensive department mapping
     this.departmentMap = {
       water: {
@@ -391,17 +391,17 @@ class AdvancedDepartmentDetector {
   calculateSimilarity(text, vector) {
     const textVector = this.createWordVector([text]);
     const commonChars = Object.keys(textVector).filter(char => vector[char]);
-    
+
     if (commonChars.length === 0) return 0;
-    
-    const dotProduct = commonChars.reduce((sum, char) => 
+
+    const dotProduct = commonChars.reduce((sum, char) =>
       sum + (textVector[char] * vector[char]), 0);
-    
+
     const magnitude1 = Math.sqrt(Object.values(textVector).reduce((sum, val) => sum + val * val, 0));
     const magnitude2 = Math.sqrt(Object.values(vector).reduce((sum, val) => sum + val * val, 0));
-    
+
     if (magnitude1 === 0 || magnitude2 === 0) return 0;
-    
+
     return dotProduct / (magnitude1 * magnitude2);
   }
 
@@ -421,13 +421,13 @@ class AdvancedDepartmentDetector {
       const result = this.processAnalysisResult(analysis);
 
       // Cache the result
-      this.cache.set(cacheKey, { 
-        department: result.department, 
-        timestamp: Date.now() 
+      this.cache.set(cacheKey, {
+        department: result.department,
+        timestamp: Date.now()
       });
 
       this.updateStatistics(startTime, result.department);
-      
+
       return result.department;
 
     } catch (error) {
@@ -440,14 +440,14 @@ class AdvancedDepartmentDetector {
   async performAdvancedAnalysis(title, description) {
     const combinedText = (title + ' ' + description).toLowerCase();
     const language = this.detectLanguage(combinedText);
-    
+
     // Multi-step analysis
     const step1 = await this.semanticAnalysis(combinedText);
     const step2 = await this.patternMatching(combinedText);
     const step3 = await this.keywordScoring(combinedText);
     const step4 = await this.contextualAnalysis(combinedText);
     const step5 = await this.groqAnalysis(title, description);
-    
+
     return {
       semantic: step1,
       patterns: step2,
@@ -470,17 +470,17 @@ class AdvancedDepartmentDetector {
 
   async semanticAnalysis(text) {
     const results = {};
-    
+
     for (const [dept, config] of Object.entries(this.departmentMap)) {
       let score = 0;
-      
+
       // Word similarity scoring
       for (const keyword of config.keywords) {
         if (text.includes(keyword)) {
           score += config.weights.primary;
         }
       }
-      
+
       // Pattern matching
       if (this.contextualPatterns[dept]) {
         for (const pattern of this.contextualPatterns[dept]) {
@@ -489,16 +489,16 @@ class AdvancedDepartmentDetector {
           }
         }
       }
-      
+
       results[dept] = score;
     }
-    
+
     return results;
   }
 
   async patternMatching(text) {
     const results = {};
-    
+
     for (const [dept, patterns] of Object.entries(this.contextualPatterns)) {
       let matches = 0;
       for (const pattern of patterns) {
@@ -508,16 +508,16 @@ class AdvancedDepartmentDetector {
       }
       results[dept] = matches;
     }
-    
+
     return results;
   }
 
   async keywordScoring(text) {
     const results = {};
-    
+
     for (const [dept, config] of Object.entries(this.departmentMap)) {
       let score = 0;
-      
+
       // Primary keywords
       for (const keyword of config.keywords) {
         const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
@@ -526,32 +526,32 @@ class AdvancedDepartmentDetector {
           score += matches.length * config.weights.primary;
         }
       }
-      
+
       results[dept] = score;
     }
-    
+
     return results;
   }
 
   async contextualAnalysis(text) {
     const results = {};
-    
+
     // Analyze context and relationships
     const sentences = text.split(/[.!?]+/);
-    
+
     for (const [dept, config] of Object.entries(this.departmentMap)) {
       let contextScore = 0;
-      
+
       for (const sentence of sentences) {
         let sentenceScore = 0;
-        
+
         // Check for keyword clusters
         for (const keyword of config.keywords) {
           if (sentence.includes(keyword)) {
             sentenceScore += config.weights.primary;
           }
         }
-        
+
         // Apply intensity modifiers
         for (const [intensity, words] of Object.entries(this.intensityModifiers)) {
           for (const word of words) {
@@ -560,13 +560,13 @@ class AdvancedDepartmentDetector {
             }
           }
         }
-        
+
         contextScore += sentenceScore;
       }
-      
+
       results[dept] = contextScore;
     }
-    
+
     return results;
   }
 
@@ -582,23 +582,20 @@ class AdvancedDepartmentDetector {
             Analyze this complaint and return ONLY ONE WORD from this list:
             water, electricity, garbage, roads, health, traffic, noise, pollution, safety, infrastructure, other
             
-            Advanced Classification Rules:
-            1. Consider multiple factors: keywords, context, intent, urgency, impact
-            2. Weight recent developments and trends
-            3. Account for regional language variations
-            4. Prioritize based on severity and public safety
+            Strict Categorization Rules:
+            1. UTILITY CROSSOVER: Use extreme caution with the word "supply".
+               - If keywords like "bijli", "light", "power", "current", "voltage", or "transformer" are present, it is ALWAYS "electricity".
+               - If keywords like "paani", "jal", "tap", "pipe", "tanker", or "borewell" are present, it is ALWAYS "water".
+            2. Language: Support Hindi, English, and Hinglish. 
+            3. Accuracy: If both a utility and a road are mentioned, prioritize the utility unless the road damage is the main focus.
             
             Department-Specific Indicators:
-            - Water: supply disruption, quality issues, access problems, distribution issues
-            - Electricity: power outages, safety hazards, infrastructure failures, service interruptions
-            - Garbage: waste management, collection issues, environmental concerns, public health
-            - Roads: infrastructure damage, traffic safety, accessibility, mobility
-            - Health: medical services, healthcare access, public health, emergency care
-            - Traffic: congestion, safety, regulation, flow optimization
-            - Noise: disturbance, quality of life, environmental impact, regulations
-            - Pollution: environmental degradation, health impacts, regulatory compliance
-            - Safety: security concerns, risk assessment, public protection, emergency response
-            - Infrastructure: development, maintenance, functionality, public services
+            - Water: supply disruption, leakage, water quality, tanker issues, pipeline damage.
+            - Electricity: power outages, bijli cut, voltage issues, transformer spark, loose wires, street light off.
+            - Garbage: waste collection, kachra piling, dirty dustbins, street cleaning.
+            - Roads: potholes (sadak kharab), speed breakers, road construction blockage.
+            - Health: primary health centers, medicine availability, hospital staff behavior.
+            - Traffic: congestion, wrong way driving, parking issues.
             
             Return ONLY the department name in lowercase. No explanation.`
           },
@@ -614,7 +611,7 @@ class AdvancedDepartmentDetector {
 
       const responseText = completion.choices[0]?.message?.content || "";
       return this.parseGroqResponse(responseText);
-      
+
     } catch (error) {
       console.error('❌ Groq Analysis Failed:', error.message);
       return { department: 'other', confidence: 0.1 };
@@ -625,9 +622,9 @@ class AdvancedDepartmentDetector {
     let dept = text.trim().toLowerCase();
     // Validate and clean response
     dept = dept.replace(/[^a-z]/g, '').substring(0, 20);
-    
+
     const validDepts = ['water', 'electricity', 'garbage', 'roads', 'health', 'traffic', 'noise', 'pollution', 'safety', 'infrastructure', 'other'];
-    
+
     if (validDepts.includes(dept)) {
       return { department: dept, confidence: 0.85 };
     } else {
@@ -658,18 +655,18 @@ class AdvancedDepartmentDetector {
 
     // Find department with highest score
     const sortedDepts = Object.entries(scores)
-      .sort(([,a], [,b]) => b - a);
-    
+      .sort(([, a], [, b]) => b - a);
+
     const [bestDept, bestScore] = sortedDepts[0];
-    
+
     // Calculate overall confidence
     const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
     const confidence = totalScore > 0 ? (bestScore / totalScore) : 0.1;
-    
+
     // Apply confidence threshold
     const confidenceThreshold = 0.3;
     const department = confidence >= confidenceThreshold ? bestDept : 'other';
-    
+
     return {
       department: department,
       confidence: Math.min(confidence, 1.0),
@@ -680,12 +677,12 @@ class AdvancedDepartmentDetector {
 
   updateStatistics(startTime, department) {
     const responseTime = Date.now() - startTime;
-    
+
     this.statistics.responseTime = (
       this.statistics.responseTime + responseTime
     ) / this.statistics.totalRequests;
-    
-    this.statistics.departmentDistribution[department] = 
+
+    this.statistics.departmentDistribution[department] =
       (this.statistics.departmentDistribution[department] || 0) + 1;
   }
 
@@ -723,7 +720,7 @@ class AdvancedDepartmentDetector {
   async getTrendingDepartments(recentComplaints, days = 7) {
     const departmentCounts = {};
     const now = Date.now();
-    
+
     for (const complaint of recentComplaints) {
       const daysDiff = (now - new Date(complaint.createdAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysDiff <= days) {
@@ -731,16 +728,16 @@ class AdvancedDepartmentDetector {
         departmentCounts[department] = (departmentCounts[department] || 0) + 1;
       }
     }
-    
+
     return Object.entries(departmentCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .map(([department, count]) => ({ department, count }));
   }
 
   async validateClassification(title, description, expectedDepartment) {
     const predicted = await this.detectDepartment(title, description);
     const isCorrect = predicted === expectedDepartment;
-    
+
     if (isCorrect) {
       this.statistics.accuracy = (
         this.statistics.accuracy * (this.statistics.totalRequests - 1) + 1
@@ -750,7 +747,7 @@ class AdvancedDepartmentDetector {
         this.statistics.accuracy * (this.statistics.totalRequests - 1)
       ) / this.statistics.totalRequests;
     }
-    
+
     return {
       predicted,
       expected: expectedDepartment,
@@ -777,7 +774,7 @@ class AdvancedDepartmentDetector {
 
   async exportTrainingData() {
     const trainingData = [];
-    
+
     for (const [dept, config] of Object.entries(this.departmentMap)) {
       for (const keyword of config.keywords) {
         trainingData.push({
@@ -787,20 +784,20 @@ class AdvancedDepartmentDetector {
         });
       }
     }
-    
+
     return trainingData;
   }
 
   async importTrainingData(data) {
     const departmentMap = {};
-    
+
     for (const item of data) {
       if (!departmentMap[item.label]) {
         departmentMap[item.label] = { keywords: [] };
       }
       departmentMap[item.label].keywords.push(item.text);
     }
-    
+
     this.departmentMap = { ...this.departmentMap, ...departmentMap };
     this.initializeVectors();
   }
@@ -809,13 +806,13 @@ class AdvancedDepartmentDetector {
     // Clear old cache entries
     const now = Date.now();
     const cacheTimeout = 24 * 60 * 60 * 1000; // 24 hours
-    
+
     for (const [key, value] of this.cache.entries()) {
       if (now - value.timestamp > cacheTimeout) {
         this.cache.delete(key);
       }
     }
-    
+
     // Optimize vectors
     this.initializeVectors();
   }
@@ -859,7 +856,7 @@ class AdvancedDepartmentDetector {
       ['Road damage', 'Potholes everywhere'],
       ['Garbage collection', 'Waste not collected']
     ];
-    
+
     for (const [title, description] of warmUpData) {
       await this.detectDepartment(title, description);
     }
