@@ -10,15 +10,10 @@ const brevoApiKey = process.env.BREVO_API_KEY;
 const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmail.com';
 const brevoSenderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
-if (brevoApiKey) {
-  console.log('✅ Brevo API Key detected: ' + brevoApiKey.substring(0, 5) + '...');
+if (process.env.BREVO_API_KEY) {
+  console.log('✅ Brevo API Key detected: ' + process.env.BREVO_API_KEY.substring(0, 5) + '...');
 } else {
-  console.warn('⚠️ BREVO_API_KEY is MISSSING in process.env');
-}
-
-if (sendGridKey) {
-  // We keep this log but SendGrid is disabled in sendEmail
-  console.log('ℹ️ SendGrid Key detected: ' + sendGridKey.substring(0, 5) + '...');
+  console.warn('⚠️ BREVO_API_KEY is MISSING in process.env');
 }
 
 if (!emailUser || !emailPass) {
@@ -668,14 +663,18 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
+      const apiKey = process.env.BREVO_API_KEY;
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmail.com';
+      const senderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
+
       // 1. Try Brevo API first (Highly recommended for Render Free Tier)
-      if (brevoApiKey) {
-        console.log(`📧 Attempting Brevo API delivery to ${mailOptions.to}...`);
+      if (apiKey) {
+        console.log(`📧 Attempting Brevo API delivery to ${mailOptions.to} using ${senderEmail}...`);
         try {
           const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
             sender: {
-              name: brevoSenderName,
-              email: brevoSenderEmail
+              name: senderName,
+              email: senderEmail
             },
             to: [{ email: mailOptions.to }],
             subject: mailOptions.subject,
@@ -683,7 +682,7 @@ class EmailService {
             textContent: mailOptions.text || 'Please view this email in an HTML compatible client.'
           }, {
             headers: {
-              'api-key': brevoApiKey,
+              'api-key': apiKey,
               'Content-Type': 'application/json'
             }
           });
@@ -693,7 +692,7 @@ class EmailService {
             return true;
           }
         } catch (brevoError) {
-          console.error('❌ Brevo API Error:', brevoError.response ? brevoError.response.data : brevoError.message);
+          console.error('❌ Brevo API Error:', brevoError.response ? JSON.stringify(brevoError.response.data) : brevoError.message);
           console.warn('⚠️ Falling back to other methods...');
         }
       }
