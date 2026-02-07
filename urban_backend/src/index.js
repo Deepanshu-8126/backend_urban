@@ -31,7 +31,7 @@ app.use(rateLimit({
 
 if (process.env.RENDER) {
   console.log('🌐 Environment: Render Cloud Deployment');
-  console.log('📬 Secondary Verification: Using Personal Email API (Gmail SMTP)');
+  console.log('📬 Email Logic: ' + (process.env.BREVO_API_KEY ? 'BREVO API (Primary)' : 'SMTP FALLBACK'));
 }
 
 // ✅ BODY PARSER CONFIGURATION
@@ -243,7 +243,9 @@ app.get('/api/v1/health', async (req, res) => {
     environment: process.env.NODE_ENV || 'production',
     diagnostics: {
       database: dbStatus,
-      emailMode: process.env.SENDGRID_API_KEY ? 'SendGrid' : 'SMTP Fallback',
+      emailMode: process.env.BREVO_API_KEY ? 'Brevo API' : (process.env.SENDGRID_API_KEY ? 'SendGrid' : 'SMTP Fallback'),
+      hasBrevoKey: !!process.env.BREVO_API_KEY,
+      brevoSender: process.env.BREVO_SENDER_EMAIL || 'not set',
       uploadsWriteable: fs.existsSync(path.join(__dirname, '../uploads')),
       platform: process.platform
     }

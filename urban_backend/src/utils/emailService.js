@@ -11,12 +11,15 @@ const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmai
 const brevoSenderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
 if (brevoApiKey) {
-  console.log('✅ Brevo API Key detected and initialized');
+  console.log('✅ Brevo API Key detected: ' + brevoApiKey.substring(0, 5) + '...');
 } else {
-  console.warn('⚠️ BREVO_API_KEY not found in environment variables!');
+  console.warn('⚠️ BREVO_API_KEY is MISSSING in process.env');
 }
 
-// Initialize SendGrid removed as per user request
+if (sendGridKey) {
+  // We keep this log but SendGrid is disabled in sendEmail
+  console.log('ℹ️ SendGrid Key detected: ' + sendGridKey.substring(0, 5) + '...');
+}
 
 if (!emailUser || !emailPass) {
   console.error('❌ EMAIL_USER or EMAIL_PASS not found in .env file!');
