@@ -40,20 +40,8 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 90000
 });
 
-// Verify connection configuration (non-blocking)
-if (!sendGridKey) {
-  transporter.verify((error) => {
-    if (error) {
-      console.error('❌ Gmail SMTP Verification Failed:', error.message);
-      if (process.env.RENDER) {
-        console.warn('💡 RENDER ALERT: Render Free Tier blocks SMTP ports.');
-        console.warn('👉 Add SENDGRID_API_KEY to environment variables for email delivery.');
-      }
-    } else {
-      console.log('✅ Gmail SMTP is ready and verified');
-    }
-  });
-}
+// SMTP Verification removed as we are using Brevo API for production
+// Gmail SMTP is only used as a last resort in local dev
 
 // Cache for faster reuse
 const emailCache = new Map();
@@ -916,11 +904,26 @@ class EmailService {
   // Health check
   async testConnection() {
     try {
-      await transporter.verify();
-      console.log('✅ Email service connected successfully');
-      return true;
+      if (process.env.BREVO_API_KEY) {
+        // Simple ping to Brevo account endpoint to verify key
+        const response = await axios.get('https://api.brevo.com/v3/account', {
+          headers: { 'api-key': process.env.BREVO_API_KEY }
+        });
+        if (response.status === 200) {
+          console.log('✅ Brevo API service is connected and healthy');
+          return true;
+        }
+      }
+
+      if (transporter && !process.env.RENDER) {
+        await transporter.verify();
+        console.log('✅ Local SMTP service is healthy');
+        return true;
+      }
+
+      return false;
     } catch (error) {
-      console.error('❌ Email service connection failed:', error.message);
+      console.error('❌ Email service health check failed:', error.message);
       return false;
     }
   }
