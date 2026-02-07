@@ -38,7 +38,7 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
     )..repeat(reverse: true);
     
     _fetchHeatmapData();
-    _timer = Timer.periodic(const Duration(seconds: 60), (_) => _fetchHeatmapData(silent: true));
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _fetchHeatmapData(silent: true));
   }
 
   @override
@@ -61,6 +61,7 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
           }
           _isLoading = false;
         });
+        _showSyncToast();
       }
     } catch (e) {
       if (mounted) {
@@ -150,44 +151,65 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
                   CircleLayer(
                     circles: _heatZones.where((zone) {
                       return zone['lat'] != null && zone['lng'] != null;
-                    }).map((zone) {
+                    }).expand((zone) {
                        Color color = _getHeatColor(zone['color']);
                        final lat = (zone['lat'] as num?)?.toDouble() ?? 29.2183;
                        final lng = (zone['lng'] as num?)?.toDouble() ?? 79.5130;
                        
-                       final radius = (zone['radius'] as num?)?.toDouble() ?? 100.0;
                        
-                       return CircleMarker(
-                         point: LatLng(lat, lng),
-                         radius: 120, 
-                         useRadiusInMeter: true,
-                         color: color.withOpacity(0.25),
-                         borderColor: Colors.transparent,
-                         borderStrokeWidth: 0,
-                       );
+                       return [
+                         
+                         CircleMarker(
+                           point: LatLng(lat, lng),
+                           radius: 170, 
+                           useRadiusInMeter: true,
+                           color: color.withOpacity(0.1),
+                         ),
+                         
+                         CircleMarker(
+                           point: LatLng(lat, lng),
+                           radius: 80 + (40 * _pulseController.value), 
+                           useRadiusInMeter: true,
+                           color: color.withOpacity(0.2),
+                         ),
+                         
+                         CircleMarker(
+                           point: LatLng(lat, lng),
+                           radius: 40,
+                           useRadiusInMeter: true,
+                           color: color.withOpacity(0.6),
+                           borderColor: Colors.white.withOpacity(0.8),
+                           borderStrokeWidth: 1.5,
+                         ),
+                       ];
                     }).toList(),
                   ),
-
-                   
-                  CircleLayer(
-                    circles: _heatZones.where((zone) {
-                      return zone['lat'] != null && zone['lng'] != null;
-                    }).map((zone) {
-                       Color color = _getHeatColor(zone['color']);
+                  
+                  
+                  MarkerLayer(
+                    markers: _heatZones.map((zone) {
                        final lat = (zone['lat'] as num?)?.toDouble() ?? 29.2183;
                        final lng = (zone['lng'] as num?)?.toDouble() ?? 79.5130;
-                       
-                       return CircleMarker(
+                       return Marker(
                          point: LatLng(lat, lng),
-                         radius: 40, 
-                         useRadiusInMeter: true,
-                         color: color.withOpacity(0.5),
-                         borderColor: Colors.white.withOpacity(0.8),
-                         borderStrokeWidth: 1,
+                         width: 100, height: 100,
+                         child: GestureDetector(
+                           onTap: () => _showZoneDetails(Map<String, dynamic>.from(zone)),
+                           child: Container(color: Colors.transparent),
+                         ),
                        );
                     }).toList(),
                   ),
                 ],
+              ),
+
+              
+
+              
+              Positioned(
+                top: 120,
+                left: 16,
+                child: _buildLegendPanel(),
               ),
 
               
@@ -206,6 +228,9 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
                   child: _buildFloatingFilterDock(),
                 ),
               ),
+
+              
+              _buildSyncIndicator(),
 
               
               Positioned(
@@ -231,6 +256,82 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
               ),
             ],
           ),
+    );
+  }
+
+  bool _isSyncing = false;
+  void _showSyncToast() {
+    setState(() => _isSyncing = true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _isSyncing = false);
+    });
+  }
+
+  Widget _buildSyncIndicator() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 500),
+      top: _isSyncing ? 90 : -50,
+      left: MediaQuery.of(context).size.width / 2 - 60,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10)],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 10, height: 10,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.greenAccent),
+            ),
+            const SizedBox(width: 8),
+            Text("${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')} SYNCED", style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendPanel() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.5)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("LEGEND", style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+              const SizedBox(height: 8),
+              _buildLegendItem("Critical", Colors.red),
+              _buildLegendItem("High", Colors.orange),
+              _buildLegendItem("Moderate", Colors.yellow),
+              _buildLegendItem("Normal", Colors.green),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(label, style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF1E293B), fontWeight: FontWeight.w500)),
+        ],
+      ),
     );
   }
 
@@ -288,8 +389,21 @@ class _HeatmapScreenState extends State<HeatmapScreen> with SingleTickerProvider
                 minHeight: 4,
                 borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 8),
-              Text("Critical Density Ratio", style: GoogleFonts.inter(fontSize: 10, color: Colors.grey)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.flash_on, color: Colors.blue, size: 14),
+                    const SizedBox(width: 6),
+                    Text("Live Intelligence Active", style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.blue)),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

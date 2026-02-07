@@ -1,18 +1,22 @@
-const sgMail = require('@sendgrid/mail');
+// const sgMail = require('@sendgrid/mail'); // Removed as per user request
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 // Check if environment variables exist
 const emailUser = process.env.EMAIL_USER;
 const emailPass = process.env.EMAIL_PASS;
 const sendGridKey = process.env.SENDGRID_API_KEY;
+const brevoApiKey = process.env.BREVO_API_KEY;
+const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || 'deepanshukapri4@gmail.com';
+const brevoSenderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
-// Initialize SendGrid if API key is available
-if (sendGridKey) {
-  sgMail.setApiKey(sendGridKey);
-  console.log('✅ SendGrid initialized for production email delivery');
+if (brevoApiKey) {
+  console.log('✅ Brevo API Key detected and initialized');
 } else {
-  console.warn('⚠️ SENDGRID_API_KEY not found - will use Gmail SMTP fallback');
+  console.warn('⚠️ BREVO_API_KEY not found in environment variables!');
 }
+
+// Initialize SendGrid removed as per user request
 
 if (!emailUser || !emailPass) {
   console.error('❌ EMAIL_USER or EMAIL_PASS not found in .env file!');
@@ -661,49 +665,56 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
-      // 1. Try SendGrid first (Production - works on Render)
-      if (sendGridKey) {
-        console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
-        const msg = {
-          to: mailOptions.to,
-          from: {
-            email: 'deepanshukapri4@gmail.com',
-            name: 'Urban OS Team'
-          },
-          subject: mailOptions.subject,
-          text: mailOptions.text,
-          html: mailOptions.html,
-          headers: {
-            'X-Entity-Ref-ID': `urban-os-${Date.now()}`
-          }
-        };
-
+      // 1. Try Brevo API first (Highly recommended for Render Free Tier)
+      if (brevoApiKey) {
+        console.log(`📧 Attempting Brevo API delivery to ${mailOptions.to}...`);
         try {
-          await sgMail.send(msg);
-          console.log('✅ SendGrid delivery successful!');
-          return true;
-        } catch (sgError) {
-          console.error('❌ SendGrid Error:', sgError.message);
-          console.warn('⚠️ Falling back to Gmail SMTP...');
+          const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
+            sender: {
+              name: brevoSenderName,
+              email: brevoSenderEmail
+            },
+            to: [{ email: mailOptions.to }],
+            subject: mailOptions.subject,
+            htmlContent: mailOptions.html,
+            textContent: mailOptions.text || 'Please view this email in an HTML compatible client.'
+          }, {
+            headers: {
+              'api-key': brevoApiKey,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.status === 201 || response.status === 200) {
+            console.log('✅ Brevo API delivery successful!');
+            return true;
+          }
+        } catch (brevoError) {
+          console.error('❌ Brevo API Error:', brevoError.response ? brevoError.response.data : brevoError.message);
+          console.warn('⚠️ Falling back to other methods...');
         }
       }
 
-      // 2. Fallback to Gmail SMTP (Local development)
-      if (!transporter) {
-        console.error('❌ No email mechanism available (SendGrid or Gmail SMTP)');
-        return false;
+      // 2. Try SendGrid (REMOVED - User requested only Brevo)
+      /* 
+      if (sendGridKey) {
+        console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
+        // ...
+      }
+      */
+
+      // 3. Fallback to Gmail SMTP (Local development)
+      if (transporter && emailUser && emailPass) {
+        console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
+        await transporter.sendMail(mailOptions);
+        console.log('✅ Gmail SMTP Success!');
+        return true;
       }
 
-      console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Gmail SMTP Success!');
-      return true;
+      console.error('❌ No email mechanism available or configured correctly.');
+      return false;
     } catch (error) {
-      console.error('📧 Gmail SMTP Error:', error.message);
-      if (error.code === 'ETIMEDOUT' && process.env.RENDER) {
-        console.error('💡 RENDER ALERT: SMTP is blocked by Render Firewall.');
-        console.error('💡 Ensure you use a 16-digit App Password for hyperdk91@gmail.com.');
-      }
+      console.error('📧 Email Delivery Error:', error.message);
       return false;
     }
   }
