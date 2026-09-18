@@ -861,7 +861,7 @@ class _MonitorTrendsViewState extends State<MonitorTrendsView> with TickerProvid
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        barTouchData: const BarTouchData(enabled: true),
+        barTouchData: BarTouchData(enabled: true),
         titlesData: const FlTitlesData(
            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30)),
            bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)), 
@@ -1102,3 +1102,4 @@ class GridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

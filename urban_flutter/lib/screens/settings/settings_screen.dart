@@ -218,7 +218,7 @@ class SettingsScreen extends StatelessWidget {
       trailing: Switch(
         value: isDark,
         onChanged: onChanged,
-        activeThumbColor: Colors.blueAccent,
+        thumbColor: MaterialStateProperty.all(Colors.blueAccent),
       ),
     );
   }
@@ -265,3 +265,6 @@ We strive to provide 24/7 service but do not guarantee uninterrupted access.
 5. Changes to Terms
 We verify the right to modify these terms at any time.
 """;
+
+
+

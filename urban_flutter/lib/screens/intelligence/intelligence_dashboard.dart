@@ -506,7 +506,7 @@ class _IntelligenceDashboardScreenState extends State<IntelligenceDashboardScree
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
           maxY: 100,
-          barTouchData: const BarTouchData(enabled: false),
+          barTouchData: BarTouchData(enabled: false),
           titlesData: FlTitlesData(
             show: true,
             bottomTitles: AxisTitles(
@@ -767,3 +767,4 @@ class _IntelligenceDashboardScreenState extends State<IntelligenceDashboardScree
     );
   }
 }
+

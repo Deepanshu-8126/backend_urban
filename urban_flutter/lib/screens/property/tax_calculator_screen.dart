@@ -190,7 +190,7 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
                   Container(
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                     child: DropdownButtonFormField<String>(
-                      initialValue: selectedType,
+                      value: selectedType,
                       decoration: const InputDecoration(labelText: "Property Type", border: InputBorder.none, prefixIcon: Icon(Icons.domain, color: Colors.green), contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
                       items: propertyTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
                       onChanged: (v) => setState(() => selectedType = v!),
@@ -408,3 +408,4 @@ class _TaxCalculatorScreenState extends State<TaxCalculatorScreen> with SingleTi
     );
   }
 }
+
