@@ -239,10 +239,9 @@ exports.signup = async (req, res) => {
       success: true,
       message: 'OTP generated',
       email,
-      // Since we don't wait for email, we assume true for UX. 
-      // User will check inbox anyway.
       emailSent: true,
-      otpForTesting: process.env.NODE_ENV === 'development' ? otp : undefined
+      otp: otp,
+      otpForTesting: otp
     });
   } catch (error) {
     console.error('Signup error:', error);
