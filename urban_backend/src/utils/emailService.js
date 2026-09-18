@@ -682,36 +682,6 @@ class EmailService {
           return true;
         } catch (gmailError) {
           console.error('❌ Gmail SMTP Error:', gmailError.message);
-          console.warn('⚠️ Falling back to Brevo...');
-        }
-      }
-
-      // 2. Fallback to Brevo API
-      if (apiKey) {
-        console.log(`📧 Attempting Brevo API delivery to ${mailOptions.to} using ${senderEmail}...`);
-        try {
-          const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-            sender: {
-              name: senderName,
-              email: senderEmail
-            },
-            to: [{ email: mailOptions.to }],
-            subject: mailOptions.subject,
-            htmlContent: mailOptions.html,
-            textContent: mailOptions.text || 'Please view this email in an HTML compatible client.'
-          }, {
-            headers: {
-              'api-key': apiKey,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.status === 201 || response.status === 200) {
-            console.log('✅ Brevo API delivery successful!');
-            return true;
-          }
-        } catch (brevoError) {
-          console.error('❌ Brevo API Error:', brevoError.response ? JSON.stringify(brevoError.response.data) : brevoError.message);
         }
       }
 
