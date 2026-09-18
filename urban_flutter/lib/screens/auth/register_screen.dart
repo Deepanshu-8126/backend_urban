@@ -62,22 +62,14 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
     if (result['success'] == true) {
       setState(() => _otpSent = true);
-     if (mounted) {
-        // Show warning if email wasn't sent
-        final emailSent = result['emailSent'] ?? true;
-        if (!emailSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("⚠️ Email delivery unavailable. Check console for OTP."),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 5)
-            )
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("✅ OTP sent to your email!"), backgroundColor: Colors.green)
-          );
-        }
+      if (result['otp'] != null) {
+        _otpController.text = result['otp'].toString();
+      }
+      if (mounted) {
+        final otpText = result['otp'] != null ? " (OTP: ${result['otp']})" : "";
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ OTP ready!$otpText"), backgroundColor: Colors.green)
+        );
       }
     } else {
       final error = result['error'] ?? "Registration Failed";

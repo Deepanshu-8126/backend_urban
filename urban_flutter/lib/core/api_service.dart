@@ -171,7 +171,7 @@ class ApiService {
 
       
       if (otpResponse.statusCode == 200) {
-        return {'success': true};
+        return {'success': true, 'otp': data['otp'] ?? data['otpForTesting'], ...data};
       }
       
       

@@ -201,6 +201,7 @@ const loadRoutes = (routePath, basePath, routeName) => {
 loadRoutes('./routes/authRoutes', '/api/v1/auth', 'auth');
 loadRoutes('./routes/complaintRoutes', '/api/v1/complaints', 'complaint');
 loadRoutes('./routes/adminRoutes', '/api/v1/admin', 'admin');
+loadRoutes('./routes/disasterRoutes', '/api/v1/disaster', 'disaster');
 loadRoutes('./routes/sosRoutes', '/api/v1/sos', 'sos');
 loadRoutes('./routes/hallRoutes', '/api/v1/halls', 'hall');
 loadRoutes('./routes/dashboardRoutes', '/api/v1/dashboard', 'dashboard');

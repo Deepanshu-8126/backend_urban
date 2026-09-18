@@ -245,13 +245,13 @@ class _CityMonitorScreenState extends State<CityMonitorScreen> {
                 SwitchListTile(
                   title: const Text("Show Heatmap", style: TextStyle(color: Colors.white, fontSize: 12)),
                   value: _showHeatmap,
-                  thumbColor: MaterialStateProperty.all(Colors.orange),
+                  thumbColor: WidgetStateProperty.all(Colors.orange),
                   onChanged: (v) => setState(() => _showHeatmap = v),
                 ),
                 SwitchListTile(
                   title: const Text("Repeated Issues", style: TextStyle(color: Colors.white, fontSize: 12)),
                   value: true, 
-                  thumbColor: MaterialStateProperty.all(Colors.redAccent),
+                  thumbColor: WidgetStateProperty.all(Colors.redAccent),
                   onChanged: (v) {},
                 ),
                 const Divider(color: Colors.white24, height: 30),
@@ -459,6 +459,7 @@ class _CityMonitorScreenState extends State<CityMonitorScreen> {
     );
   }
 }
+
 
 
 
