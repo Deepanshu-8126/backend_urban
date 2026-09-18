@@ -48,7 +48,7 @@ dependencies:
   animated_text_kit: ^4.2.2
   
   # Icons (NEW!)
-  font_awesome_flutter: ^10.12.0
+  font_awesome_flutter: any
   flutter_staggered_animations: ^1.1.1
   
   # Utils
