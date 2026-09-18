@@ -11,16 +11,18 @@ val newBuildDir: Directory =
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
-val flutterExtra = mapOf(
-    "compileSdkVersion" to 36,
-    "minSdkVersion" to 24,
-    "targetSdkVersion" to 36
-)
-
 subprojects {
-    extra.set("flutter", flutterExtra)
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            extensions.findByType(com.android.build.gradle.LibraryExtension::class.java)?.apply {
+                compileSdk = 36
+            }
+        }
+    }
+}
+subprojects {
     project.evaluationDependsOn(":app")
 }
 
