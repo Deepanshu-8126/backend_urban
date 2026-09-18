@@ -651,13 +651,39 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
+      const resendApiKey = process.env.RESEND_API_KEY;
       const emailUser = (process.env.EMAIL_USER || '').trim();
       const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
-      const apiKey = process.env.BREVO_API_KEY;
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || emailUser || 'dkx01622@gmail.com';
-      const senderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
+      const senderName = process.env.BREVO_SENDER_NAME || 'CityOS Team';
 
-      // 1. Try Gmail SMTP first (Fast & Reliable with App Password on Port 465 SSL)
+      // 1. Try Resend API first (HTTPS Port 443 - Works 100% on Render Free Tier)
+      if (resendApiKey) {
+        try {
+          console.log(`📧 Attempting Resend API delivery to ${mailOptions.to}...`);
+          const response = await axios.post('https://api.resend.com/emails', {
+            from: 'CityOS <onboarding@resend.dev>',
+            to: [mailOptions.to],
+            subject: mailOptions.subject,
+            html: mailOptions.html,
+            text: mailOptions.text || 'Your verification code'
+          }, {
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.data && response.data.id) {
+            console.log(`✅ Resend API delivery successful! ID: ${response.data.id}`);
+            return true;
+          }
+        } catch (resendError) {
+          console.error('❌ Resend API Error:', resendError.response ? JSON.stringify(resendError.response.data) : resendError.message);
+          console.warn('⚠️ Falling back to Gmail SMTP...');
+        }
+      }
+
+      // 2. Fallback to Gmail SMTP
       if (emailUser && emailPass && emailPass !== 'YOUR_16_CHAR_APP_PASSWORD_HERE') {
         try {
           console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
