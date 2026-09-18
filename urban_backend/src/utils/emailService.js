@@ -651,11 +651,42 @@ class EmailService {
 
   async sendEmail(mailOptions) {
     try {
+      const emailUser = (process.env.EMAIL_USER || '').trim();
+      const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
       const apiKey = process.env.BREVO_API_KEY;
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || 'dkx01622@gmail.com';
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || emailUser || 'dkx01622@gmail.com';
       const senderName = process.env.BREVO_SENDER_NAME || 'Urban OS Team';
 
-      // 1. Try Brevo API first (Highly recommended for Render Free Tier)
+      // 1. Try Gmail SMTP first (Fast & Reliable with App Password on Port 465 SSL)
+      if (emailUser && emailPass && emailPass !== 'YOUR_16_CHAR_APP_PASSWORD_HERE') {
+        try {
+          console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
+          const gmailTransporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+              user: emailUser,
+              pass: emailPass
+            },
+            tls: {
+              rejectUnauthorized: false
+            }
+          });
+
+          const info = await gmailTransporter.sendMail({
+            ...mailOptions,
+            from: `"${senderName}" <${emailUser}>`
+          });
+          console.log(`✅ Gmail SMTP Success! ID: ${info.messageId}`);
+          return true;
+        } catch (gmailError) {
+          console.error('❌ Gmail SMTP Error:', gmailError.message);
+          console.warn('⚠️ Falling back to Brevo...');
+        }
+      }
+
+      // 2. Fallback to Brevo API
       if (apiKey) {
         console.log(`📧 Attempting Brevo API delivery to ${mailOptions.to} using ${senderEmail}...`);
         try {
@@ -681,24 +712,7 @@ class EmailService {
           }
         } catch (brevoError) {
           console.error('❌ Brevo API Error:', brevoError.response ? JSON.stringify(brevoError.response.data) : brevoError.message);
-          console.warn('⚠️ Falling back to other methods...');
         }
-      }
-
-      // 2. Try SendGrid (REMOVED - User requested only Brevo)
-      /* 
-      if (sendGridKey) {
-        console.log(`📧 Attempting SendGrid delivery to ${mailOptions.to}...`);
-        // ...
-      }
-      */
-
-      // 3. Fallback to Gmail SMTP (Local development)
-      if (transporter && emailUser && emailPass) {
-        console.log(`📧 Attempting Gmail SMTP delivery to ${mailOptions.to}...`);
-        await transporter.sendMail(mailOptions);
-        console.log('✅ Gmail SMTP Success!');
-        return true;
       }
 
       console.error('❌ No email mechanism available or configured correctly.');
