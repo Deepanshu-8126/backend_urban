@@ -92,8 +92,10 @@ const optionalAuthenticateToken = async (req, res, next) => {
   }
 };
 
-const protect = authenticateToken; // alias for backward compat`nmodule.exports = {
-  authenticateToken,`n  protect,
-  optionalauthenticateToken,`n  protect,
+const protect = authenticateToken; // alias for backward compat
+module.exports = {
+  authenticateToken,
+  protect,
+  optionalAuthenticateToken,
   adminOnly
 };
