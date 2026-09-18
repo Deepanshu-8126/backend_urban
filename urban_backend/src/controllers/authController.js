@@ -3,10 +3,20 @@ const crypto = require('crypto');
 const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const { sendOtpEmail } = require('../utils/emailService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
+// Helper: fast-fail if DB not ready
+const requireDB = (res) => {
+  if (mongoose.connection.readyState !== 1) {
+    res.status(503).json({ success: false, error: 'Database not connected. Please try again in a few seconds.' });
+    return false;
+  }
+  return true;
+};
 
 // Configure multer for profile pictures
 const storage = multer.diskStorage({
@@ -180,6 +190,7 @@ exports.sendOtp = async (req, res) => {
 // User Signup - Sends OTP to USER'S email
 exports.signup = async (req, res) => {
   try {
+    if (!requireDB(res)) return;
     console.log('🆕 Signup request body:', req.body);
 
     if (!req.body) {
@@ -193,7 +204,6 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Valid email required' });
     }
 
-    // Validate password strength
     if (!password || password.length < 6) {
       return res.status(400).json({
         success: false,
