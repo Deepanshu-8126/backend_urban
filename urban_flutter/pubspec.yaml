@@ -38,7 +38,7 @@ dependencies:
   cached_network_image: ^3.3.1
   
   # Charts & Visualization (NEW!)
-  fl_chart: any
+  fl_chart: ^0.69.0
   syncfusion_flutter_charts: any
   
   # Animations (NEW!)
@@ -48,7 +48,7 @@ dependencies:
   animated_text_kit: ^4.2.2
   
   # Icons (NEW!)
-  font_awesome_flutter: any
+  font_awesome_flutter: ^10.7.0
   flutter_staggered_animations: any
   
   # Utils
