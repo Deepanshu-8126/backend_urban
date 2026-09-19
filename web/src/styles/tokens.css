@@ -1,0 +1,26 @@
+:root {
+  /* Flutter App Dark Theme Palette (0xFF0F172A -> 0xFF1E293B -> 0xFF000000) */
+  --flutter-dark-bg-1: #0F172A;
+  --flutter-dark-bg-2: #1E293B;
+  --flutter-dark-bg-3: #000000;
+  
+  /* Flutter App Light Theme Palette (0xFFF1F5F9 -> 0xFFE2E8F0 -> 0xFFFFFFFF) */
+  --flutter-light-bg-1: #F1F5F9;
+  --flutter-light-bg-2: #E2E8F0;
+  --flutter-light-bg-3: #FFFFFF;
+
+  /* Service Card Colors from citizen_dashboard.dart */
+  --color-file-complaint: #FF5252;   /* Colors.redAccent */
+  --color-complaint-hub: #FFAB40;    /* Colors.orangeAccent */
+  --color-sos-emergency: #F44336;    /* Colors.red */
+  --color-aqi-monitor: #64FFDA;      /* Colors.tealAccent */
+  --color-property-tax: #4CAF50;     /* Colors.green */
+  --color-funds-tracker: #009688;    /* Colors.teal */
+  --color-citybrain-ai: #7C4DFF;     /* Colors.deepPurpleAccent */
+
+  /* Blue Accent */
+  --color-blue-accent: #448AFF;
+  
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
